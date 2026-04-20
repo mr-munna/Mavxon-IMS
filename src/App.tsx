@@ -3166,7 +3166,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
         )}
       </AnimatePresence>
 
-      <div className={cn("flex", !user && isAuthReady ? "h-screen overflow-hidden bg-cover bg-center bg-no-repeat" : "min-h-screen bg-slate-50")} style={!user && isAuthReady ? { backgroundImage: 'url("https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&q=80&w=2000")' } : {}}>
+      <div className={cn("flex min-h-screen", !user && isAuthReady ? "h-screen overflow-hidden bg-cover bg-center bg-no-repeat" : "bg-slate-50")} style={!user && isAuthReady ? { backgroundImage: 'url("https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&q=80&w=2000")' } : {}}>
         {!user && isAuthReady && (
           <div className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-0" />
         )}
@@ -3570,22 +3570,26 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
       </header>
     )}
 
-      <main className={cn(
-        "flex-1 w-full mx-auto pb-24 space-y-6 relative overflow-y-auto overscroll-contain", 
-        user && isApproved ? "max-w-[1600px] p-4 sm:p-6" : ""
-      )}>
-        {/* Global Search Page Background */}
-        {user && isApproved && activeTab === 'search' && (
+        {/* Global Backgrounds */}
+        {user && isApproved && (activeTab === 'search' || activeTab === 'landing') && (
           <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
             <img 
-               src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000" 
+               src={activeTab === 'landing' 
+                 ? "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=2000"
+                 : "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000"
+               }
                alt="" 
-               className="w-full h-full object-cover opacity-90"
+               className="w-full h-full object-cover opacity-90 transition-all duration-1000"
                referrerPolicy="no-referrer"
             />
             <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px]" />
           </div>
         )}
+
+      <main className={cn(
+        "flex-1 w-full mx-auto pb-24 space-y-6 relative overflow-y-auto overscroll-contain", 
+        user && isApproved ? "max-w-[1600px] p-4 sm:p-6" : ""
+      )}>
         {/* Login Required Message */}
         {!user && isAuthReady && (
           <div className="h-screen flex items-center justify-center p-4 relative z-10 overflow-hidden">
@@ -5634,18 +5638,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
           )}
 
           {activeTab === 'landing' && (
-            <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden bg-white">
-               {/* Background Image with Overlay */}
-               <div className="absolute inset-0 z-0">
-                 <img 
-                    src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=2000" 
-                    alt="Background" 
-                    className="w-full h-full object-cover opacity-90"
-                    referrerPolicy="no-referrer"
-                 />
-                 <div className="absolute inset-0 bg-white/10" />
-               </div>
-
+            <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
                {/* Atmospheric Background for Glass Effect */}
                <div className="absolute inset-0 pointer-events-none z-0">
                  <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px]" />
