@@ -2881,19 +2881,34 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
   const filteredTiles = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const source = activeTab === 'master_sheet' ? tiles : activeTiles;
-    return source.filter(t => (t.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (t.brand || '').toLowerCase().includes(searchQuery.toLowerCase()));
+    const q = searchQuery.toLowerCase().trim();
+    return source.filter(t => 
+      (t.name || '').toLowerCase().includes(q) || 
+      (t.brand || '').toLowerCase().includes(q) ||
+      (t.size || '').toLowerCase().includes(q)
+    );
   }, [tiles, activeTiles, searchQuery, activeTab]);
 
   const filteredGoods = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const source = activeTab === 'master_sheet' ? goods : activeGoods;
-    return source.filter(g => (g.code || '').toLowerCase().includes(searchQuery.toLowerCase()) || (g.brand || '').toLowerCase().includes(searchQuery.toLowerCase()));
+    const q = searchQuery.toLowerCase().trim();
+    return source.filter(g => 
+      (g.code || '').toLowerCase().includes(q) || 
+      (g.brand || '').toLowerCase().includes(q) ||
+      (g.description || '').toLowerCase().includes(q)
+    );
   }, [goods, activeGoods, searchQuery, activeTab]);
 
   const filteredTools = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const source = activeTab === 'master_sheet' ? tools : activeTools;
-    return source.filter(t => (t.details || '').toLowerCase().includes(searchQuery.toLowerCase()));
+    const q = searchQuery.toLowerCase().trim();
+    return source.filter(t => 
+      (t.details || '').toLowerCase().includes(q) ||
+      (t.states || '').toLowerCase().includes(q) ||
+      (t.issueToDate || '').toLowerCase().includes(q)
+    );
   }, [tools, activeTools, searchQuery, activeTab]);
 
   const displayTiles = useMemo(() => {
@@ -3297,9 +3312,9 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
 
         {/* Main Content Wrapper */}
         <div className={cn(
-          "flex-1 flex flex-col min-h-screen transition-all overscroll-none", 
+          "flex-1 flex flex-col min-h-screen transition-all overscroll-none overflow-hidden", 
           user && isApproved ? "md:ml-56" : "",
-          user && isApproved ? "pt-16 pb-16 md:pt-0 md:pb-0 h-[100dvh] overflow-hidden md:h-auto md:overflow-visible" : ""
+          user && isApproved ? "pt-16 pb-16 md:pt-0 md:pb-0 h-[100dvh] md:h-auto md:overflow-visible" : ""
         )}>
           {/* Header (Mobile + Desktop User Info) */}
           {user && isApproved && (
@@ -3555,7 +3570,10 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
       </header>
     )}
 
-      <main className={cn("flex-1 w-full mx-auto pb-24 space-y-6 relative", user && isApproved ? "max-w-[1600px] p-4 sm:p-6" : "")}>
+      <main className={cn(
+        "flex-1 w-full mx-auto pb-24 space-y-6 relative overflow-y-auto overscroll-contain", 
+        user && isApproved ? "max-w-[1600px] p-4 sm:p-6" : ""
+      )}>
         {/* Global Search Page Background */}
         {user && isApproved && activeTab === 'search' && (
           <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -3815,6 +3833,16 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Start Searching</h3>
                 <p className="text-gray-500 max-w-sm">Enter a product name, code, or brand to find what you're looking for.</p>
+              </div>
+            )}
+
+            {activeTab === 'search' && searchQuery.trim() !== '' && filteredTiles.length === 0 && filteredGoods.length === 0 && filteredTools.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center">
+                  <Package className="w-10 h-10 text-gray-400 opacity-50" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">No results found</h3>
+                <p className="text-gray-500 max-w-sm">No items match your search for "{searchQuery}". Try a different product name, brand or code.</p>
               </div>
             )}
             {(activeTab === 'master' && isAdmin || activeTab === 'master_sheet' && isSuperAdmin) && (
@@ -4209,7 +4237,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
           )}
 
           {/* Tiles Section */}
-          {(((activeTab === 'master' && isAdmin || activeTab === 'master_sheet' && isSuperAdmin) && masterSubTab === 'tiles') || (activeTab === 'search' && showSearchBox && searchQuery.trim() !== '' && isFullyApproved && filteredTiles.length > 0)) && (
+          {(((activeTab === 'master' && isAdmin || activeTab === 'master_sheet' && isSuperAdmin) && masterSubTab === 'tiles') || ((activeTab === 'search' || showSearchBox) && searchQuery.trim() !== '' && filteredTiles.length > 0)) && (
             <section className="space-y-4">
               <div className={cn(
                 "flex items-center justify-between",
@@ -4553,7 +4581,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
           )}
 
           {/* Goods Section */}
-          {(((activeTab === 'master' && isAdmin || activeTab === 'master_sheet' && isSuperAdmin) && masterSubTab === 'goods') || (activeTab === 'search' && showSearchBox && searchQuery.trim() !== '' && isFullyApproved && filteredGoods.length > 0)) && (
+          {(((activeTab === 'master' && isAdmin || activeTab === 'master_sheet' && isSuperAdmin) && masterSubTab === 'goods') || ((activeTab === 'search' || showSearchBox) && searchQuery.trim() !== '' && filteredGoods.length > 0)) && (
             <section className="space-y-4">
               <div className={cn(
                 "flex items-center justify-between",
@@ -4869,7 +4897,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
           )}
 
           {/* Tools Section */}
-          {(((activeTab === 'master' && isAdmin || activeTab === 'master_sheet' && isSuperAdmin) && masterSubTab === 'tools') || (activeTab === 'search' && showSearchBox && searchQuery.trim() !== '' && isFullyApproved && filteredTools.length > 0)) && (
+          {(((activeTab === 'master' && isAdmin || activeTab === 'master_sheet' && isSuperAdmin) && masterSubTab === 'tools') || ((activeTab === 'search' || showSearchBox) && searchQuery.trim() !== '' && filteredTools.length > 0)) && (
             <section className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -5115,7 +5143,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
           )}
 
           {/* Booked Items Section */}
-          {(activeTab === 'booked' || (activeTab === 'search' && showSearchBox && searchQuery.trim() !== '' && isFullyApproved && bookedItems.filter(b => {
+          {(activeTab === 'booked' || ((activeTab === 'search' || showSearchBox) && searchQuery.trim() !== '' && isFullyApproved && bookedItems.filter(b => {
               if (b.deleted) return false;
               const matchesSearch = ((b.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (b.code || '').toLowerCase().includes(searchQuery.toLowerCase()));
               const matchesMarketing = marketingFilter === 'all' ? true : b.marketingPerson === marketingFilter;
@@ -5463,15 +5491,16 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
           )}
 
           {/* Stock Items Section */}
-          {(activeTab === 'stock' || (activeTab === 'search' && showSearchBox && searchQuery.trim() !== '' && [
+          {(activeTab === 'stock' || ((activeTab === 'search' || showSearchBox) && searchQuery.trim() !== '' && [
               ...tiles.filter(t => !t.deleted).map(t => ({ ...t, type: 'tile' })), 
-              ...goods.filter(g => !g.deleted).map(g => ({ ...g, type: 'good', name: g.brand + ' ' + g.code, size: 'N/A' }))
-            ].filter(item => 
-              (item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-              (item.code || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-              (item.brand || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-              (item.size || '').toLowerCase().includes(searchQuery.toLowerCase())
-            ).length > 0)) && (
+              ...goods.filter(g => !g.deleted).map(g => ({ ...g, type: 'good', name: (g.brand || '') + ' ' + (g.code || ''), size: 'N/A' }))
+            ].filter(item => {
+              const q = searchQuery.toLowerCase();
+              return (item.name || '').toLowerCase().includes(q) ||
+                (item.code || '').toLowerCase().includes(q) ||
+                (item.brand || '').toLowerCase().includes(q) ||
+                (item.size || '').toLowerCase().includes(q);
+            }).length > 0)) && (
             <section className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-black text-black flex items-center gap-2">
@@ -5534,7 +5563,9 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                         const bookedPcs = bookedForThis.reduce((sum, b) => sum + (b.qtyPcs || 0), 0);
 
                         const totalSft = (item as any).totalSft || 0;
-                        const totalPcs = (item as any).type === 'tile' ? (item as any).totalPcs : ((item as any).bonorupa + (item as any).banani);
+                        const totalPcs = (item as any).type === 'tile' ? 
+                          ((item as any).totalPcs || 0) : 
+                          (((item as any).dokhinkhan || 0) + ((item as any).bonorupa || 0) + ((item as any).banani || 0));
 
                         const stockSft = Math.max(0, Math.round(totalSft - bookedSft));
                         const stockPcs = Math.max(0, Math.round(totalPcs - bookedPcs));
@@ -5544,12 +5575,21 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
 
                       return itemsWithStock
                         .filter(item => {
-                          // Hide items with 0 stock in both SFT and PCS
-                          if (item.stockSft <= 0 && item.stockPcs <= 0) return false;
+                          const q = searchQuery.toLowerCase().trim();
                           
-                          if (!(activeTab === 'search' || (showSearchBox && searchQuery.trim() !== ''))) return true;
-                          const q = searchQuery.toLowerCase();
-                          return (item as any).name?.toLowerCase().includes(q) || (item as any).code?.toLowerCase().includes(q) || (item as any).brand?.toLowerCase().includes(q);
+                          // If searching, hide items that don't match
+                          if (q) {
+                            const name = (item as any).name?.toLowerCase() || '';
+                            const code = (item as any).code?.toLowerCase() || '';
+                            const brand = (item as any).brand?.toLowerCase() || '';
+                            const matches = name.includes(q) || code.includes(q) || brand.includes(q);
+                            if (!matches) return false;
+                          }
+
+                          // If NOT searching, hide items with 0 stock
+                          if (!q && item.stockSft <= 0 && item.stockPcs <= 0) return false;
+                          
+                          return true;
                         })
                         .map((item, index) => (
                           <tr 
