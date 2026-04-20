@@ -104,11 +104,7 @@ function numberToWords(num: number): string {
 function shouldOpenInNewTab(url: string): boolean {
   if (!url) return false;
   const blockers = [
-    'google.com', 'sanipexgroup.com', 'facebook.com', 'youtube.com', 'pinterest.com', 
-    'twitter.com', 'x.com', 'instagram.com', 'linkedin.com', 
-    'github.com', 'amazon.com', 'netflix.com', 'reddit.com',
-    'microsoft.com', 'apple.com', 'bing.com', 'yahoo.com', 'duckduckgo.com',
-    'wikipedia.org', 'medium.com', 'quora.com', 'stackoverflow.com'
+     'google.com', 'sanipexgroup.com', 'tubadzin.pl/en', 'arpaceramiche.it/en'
   ];
   return blockers.some(domain => url.toLowerCase().includes(domain));
 }
@@ -3158,11 +3154,11 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
               <button
                 onClick={() => setActiveTab('landing')}
                 className={cn(
-                  "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm",
+                  "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
                   activeTab === 'landing' ? "bg-white text-[#0f172a] font-bold shadow-sm" : "text-slate-300 hover:bg-white/10 hover:text-white"
                 )}
               >
-                <Home className="w-5 h-5" /> Home
+                <Home className="w-5 h-5 text-emerald-400" /> Home
               </button>
 
               {isFullyApproved && (
@@ -3171,32 +3167,32 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                     <button
                       onClick={() => setActiveTab('master')}
                       className={cn(
-                        "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm",
+                        "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
                         activeTab === 'master' ? "bg-white text-[#0f172a] font-bold shadow-sm" : "text-slate-300 hover:bg-white/10 hover:text-white"
                       )}
                     >
-                      <Grid3X3 className="w-5 h-5" /> Product Inventory
+                      <Grid3X3 className="w-5 h-5 text-blue-400" /> ADD PRODUCT
                     </button>
                   )}
                   <button
                     onClick={() => setActiveTab('booked')}
                     className={cn(
-                      "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm",
+                      "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
                       activeTab === 'booked' ? "bg-white text-[#0f172a] font-bold shadow-sm" : "text-slate-300 hover:bg-white/10 hover:text-white"
                     )}
                   >
-                    <FileText className="w-5 h-5" /> Booked Item
+                    <FileText className="w-5 h-5 text-amber-400" /> Booked Item
                   </button>
                 </>
               )}
               <button
                 onClick={() => setActiveTab('stock')}
                 className={cn(
-                  "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm",
+                  "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
                   activeTab === 'stock' ? "bg-white text-[#0f172a] font-bold shadow-sm" : "text-slate-300 hover:bg-white/10 hover:text-white"
                 )}
               >
-                <Database className="w-5 h-5" /> Stock Item
+                <Database className="w-5 h-5 text-rose-400" /> Stock Item
               </button>
 
               {isFullyApproved && (
@@ -3204,29 +3200,29 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                   <button
                     onClick={() => setActiveTab('quote')}
                     className={cn(
-                      "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm",
+                      "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
                       activeTab === 'quote' ? "bg-white text-[#0f172a] font-bold shadow-sm" : "text-slate-300 hover:bg-white/10 hover:text-white"
                     )}
                   >
-                    <Calculator className="w-5 h-5" /> Make Quote
+                    <Calculator className="w-5 h-5 text-purple-400" /> Make Quote
                   </button>
                   <button
                     onClick={() => setActiveTab('view_quote')}
                     className={cn(
-                      "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm",
+                      "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
                       activeTab === 'view_quote' ? "bg-white text-[#0f172a] font-bold shadow-sm" : "text-slate-300 hover:bg-white/10 hover:text-white"
                     )}
                   >
-                    <Search className="w-5 h-5" /> View Quote
+                    <Search className="w-5 h-5 text-cyan-400" /> View Quote
                   </button>
                   <button
                     onClick={() => setActiveTab('sales')}
                     className={cn(
-                      "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm",
+                      "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
                       activeTab === 'sales' ? "bg-white text-[#0f172a] font-bold shadow-sm" : "text-slate-300 hover:bg-white/10 hover:text-white"
                     )}
                   >
-                    <FileText className="w-5 h-5" /> Sales / Invoice
+                    <FileText className="w-5 h-5 text-indigo-400" /> Sales / Invoice
                   </button>
                 </>
               )}
@@ -3234,22 +3230,22 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                 <button
                   onClick={() => setActiveTab('master_sheet')}
                   className={cn(
-                    "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm",
+                    "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
                     activeTab === 'master_sheet' ? "bg-white text-[#0f172a] font-bold shadow-sm" : "text-slate-300 hover:bg-white/10 hover:text-white"
                   )}
                 >
-                  <Database className="w-5 h-5" /> Master Sheet
+                  <Database className="w-5 h-5 text-pink-400" /> Master Sheet
                 </button>
               )}
               {isSupremeAdmin && (
                 <button
                   onClick={() => setActiveTab('users')}
                   className={cn(
-                    "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm",
+                    "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
                     activeTab === 'users' ? "bg-white text-[#0f172a] font-bold shadow-sm" : "text-slate-300 hover:bg-white/10 hover:text-white"
                   )}
                 >
-                  <ShieldCheck className="w-5 h-5" /> Users
+                  <ShieldCheck className="w-5 h-5 text-teal-400" /> Users
                 </button>
               )}
             </nav>
@@ -3406,21 +3402,21 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                 <button
                   onClick={() => { setActiveTab('landing'); setIsMenuOpen(false); }}
                   className={cn(
-                    "w-full px-4 py-3 rounded-xl font-medium flex items-center justify-start gap-3 uppercase tracking-wider text-sm",
+                    "w-full px-4 py-3 rounded-xl font-medium flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
                     activeTab === 'landing' ? "bg-[#0f172a] text-white font-bold" : "text-gray-500 hover:bg-gray-50"
                   )}
                 >
-                  <Home className="w-5 h-5" /> Home
+                  <Home className="w-5 h-5 text-emerald-500" /> Home
                 </button>
                 {isFullyApproved && (
                   <button
                     onClick={() => { setActiveTab('search'); setIsMenuOpen(false); }}
                     className={cn(
-                      "w-full px-4 py-3 rounded-xl font-medium flex items-center gap-3 uppercase tracking-wider text-sm",
+                      "w-full px-4 py-3 rounded-xl font-medium flex items-center gap-3 uppercase tracking-wider text-sm text-left",
                       activeTab === 'search' ? "bg-[#0f172a] text-white font-bold" : "text-gray-500 hover:bg-gray-50"
                     )}
                   >
-                    <Search className="w-5 h-5" /> Search
+                    <Search className="w-5 h-5 text-sky-500" /> Search
                   </button>
                 )}
                 {isFullyApproved && (
@@ -3429,21 +3425,21 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                       <button
                         onClick={() => { setActiveTab('master'); setIsMenuOpen(false); }}
                         className={cn(
-                          "w-full px-4 py-3 rounded-xl font-medium flex items-center justify-start gap-3 uppercase tracking-wider text-sm",
+                          "w-full px-4 py-3 rounded-xl font-medium flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
                           activeTab === 'master' ? "bg-[#0f172a] text-white font-bold" : "text-gray-500 hover:bg-gray-50"
                         )}
                       >
-                        <Grid3X3 className="w-5 h-5" /> Product Inventory
+                        <Grid3X3 className="w-5 h-5 text-blue-500" /> ADD PRODUCT
                       </button>
                     )}
                     <button
                       onClick={() => { setActiveTab('booked'); setIsMenuOpen(false); }}
                       className={cn(
-                        "w-full px-4 py-3 rounded-xl font-medium flex items-center gap-3 uppercase tracking-wider text-sm",
+                        "w-full px-4 py-3 rounded-xl font-medium flex items-center gap-3 uppercase tracking-wider text-sm text-left",
                         activeTab === 'booked' ? "bg-[#0f172a] text-white font-bold" : "text-gray-500 hover:bg-gray-50"
                       )}
                     >
-                      <FileText className="w-5 h-5" /> Booked Item
+                      <FileText className="w-5 h-5 text-amber-500" /> Booked Item
                     </button>
                   </>
                 )}
@@ -4268,7 +4264,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                       <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Banani (SFT)</TableHeader>
                       <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>PCS_2</TableHeader>
                       <TableHeader className={cn(activeTab === 'search' && "bg-slate-200/50")}>Remark_2</TableHeader>
-                      {((isAdmin && activeTab === 'master') || (isSupremeAdmin && activeTab === 'master_sheet')) && <TableHeader className={cn(activeTab === 'search' && "bg-slate-200/50")}>Action</TableHeader>}
+                      {((isAdmin && activeTab === 'master') || (isSupremeAdmin && activeTab === 'master_sheet')) && !!highlightedRow && <TableHeader className={cn(activeTab === 'search' && "bg-slate-200/50")}>Action</TableHeader>}
                     </tr>
                   </thead>
                   <tbody>
@@ -5172,7 +5168,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                       <TableHeader>Client Name</TableHeader>
                       <TableHeader>Marketing Person</TableHeader>
                       <TableHeader>Remark</TableHeader>
-                      {isAdmin && <TableHeader>Action</TableHeader>}
+                      {isAdmin && (!!highlightedRow || editingId !== null) && <TableHeader>Action</TableHeader>}
                     </tr>
                   </thead>
                   <tbody>
@@ -5370,51 +5366,50 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                               />
                             ) : item.remark}
                           </TableCell>
-                          {isAdmin && (highlightedRow === item.id || isEditing) && (
+                          {isAdmin && (highlightedRow === item.id || editingId === item.id) && (
                             <TableCell>
-                              <div className="flex gap-2">
-                                {isEditing ? (
-                                  <>
-                                    <Button 
-                                      variant="primary" 
-                                      size="sm" 
-                                      onClick={() => handleInlineEditSave('bookedItems', item.id)}
-                                    >
-                                      Save
-                                    </Button>
-                                    <Button 
-                                      variant="secondary" 
-                                      size="sm" 
-                                      onClick={() => { setEditingId(null); setEditData(null); setHighlightedRow(null); }}
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm" 
-                                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                                      onClick={() => { setEditingId(item.id); setEditData({ ...item }); }}
-                                    >
-                                      Edit
-                                    </Button>
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm" 
-                                      className="text-red-600 border-red-200 hover:bg-red-50"
-                                      onClick={() => handleDeleteItem('bookedItems', item.id)}
-                                    >
-                                      Delete
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
+                              {(highlightedRow === item.id || isEditing) ? (
+                                <div className="flex gap-2">
+                                  {isEditing ? (
+                                    <>
+                                      <Button 
+                                        variant="primary" 
+                                        size="sm" 
+                                        onClick={() => handleInlineEditSave('bookedItems', item.id)}
+                                      >
+                                        Save
+                                      </Button>
+                                      <Button 
+                                        variant="secondary" 
+                                        size="sm" 
+                                        onClick={() => { setEditingId(null); setEditData(null); setHighlightedRow(null); }}
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                        onClick={() => { setEditingId(item.id); setEditData({ ...item }); }}
+                                      >
+                                        Edit
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="text-red-600 border-red-200 hover:bg-red-50"
+                                        onClick={() => handleDeleteItem('bookedItems', item.id)}
+                                      >
+                                        Delete
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+                              ) : null}
                             </TableCell>
-                          )}
-                          {isAdmin && (highlightedRow !== item.id && !isEditing) && (
-                            <TableCell>&nbsp;</TableCell>
                           )}
                         </tr>
                       );
