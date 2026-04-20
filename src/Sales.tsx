@@ -726,9 +726,10 @@ export function SalesManager({
                         </div>
 
                         {saleItems.length > 0 ? (
-                            <table className="w-full text-sm text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-gray-50 border border-gray-200">
+                            <div className="overflow-x-auto border border-gray-200 rounded-xl">
+                                <table className="w-full text-sm text-left border-collapse min-w-[800px]">
+                                    <thead>
+                                        <tr className="bg-gray-50 border-b border-gray-200">
                                         <th className="px-4 py-3 font-normal text-gray-500 uppercase text-xs w-12">#</th>
                                         <th className="px-4 py-3 font-normal text-gray-500 uppercase text-xs">Item Description</th>
                                         <th className="px-4 py-3 font-normal text-gray-500 uppercase text-xs w-24">Unit</th>
@@ -782,6 +783,7 @@ export function SalesManager({
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
                         ) : (
                             <div className="border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-3 bg-gray-50/50">
                                 <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center border border-gray-100">

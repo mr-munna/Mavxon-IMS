@@ -213,6 +213,21 @@ const BLUE_COLOR = '#4285F4';
 
 // --- Components ---
 
+const MobileSearchInput = ({ value, onChange, placeholder = "Search..." }: { value: string, onChange: (val: string) => void, placeholder?: string }) => (
+  <div className="md:hidden flex-1 max-w-[150px] sm:max-w-[200px] ml-2">
+    <div className="relative group">
+      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+      <input 
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full pl-8 pr-2 py-1.5 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-500 shadow-sm focus:ring-4 focus:ring-blue-500/10 transition-all font-normal text-slate-900"
+      />
+    </div>
+  </div>
+);
+
 const Button = ({ 
   children, 
   onClick, 
@@ -2987,57 +3002,60 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
       )}
 
       {/* Right Sidebar */}
-      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2 p-2 bg-white border-l border-y border-gray-200 rounded-l-2xl shadow-xl">
-        <div className="text-[8px] font-bold text-gray-400 text-center mb-1">LINKS</div>
-        {sidebarLinks.map((link, idx) => {
-          const openInNewTab = shouldOpenInNewTab(link.url);
-          if (openInNewTab) {
-            return (
-              <a
-                key={`${link.name}-${idx}`}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 flex items-center justify-center bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-xl border border-gray-100 shadow-sm transition-all group relative"
-                title={link.name}
-              >
-                {getIcon(link.icon, link.url)}
-                <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap">
-                  {link.name}
-                </span>
-              </a>
-            );
-          }
-          return (
-            <button
-              key={`${link.name}-${idx}`}
-              onClick={() => setExternalUrl(link.url)}
-              className="w-10 h-10 flex items-center justify-center bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-xl border border-gray-100 shadow-sm transition-all group relative"
-              title={link.name}
-            >
-              {getIcon(link.icon, link.url)}
-              <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap">
-                {link.name}
-              </span>
-            </button>
-          );
-        })}
-        {isSupremeAdmin && (
-          <>
-            <div className="h-px bg-gray-200 my-1 mx-1" />
-            <button
-              onClick={() => setShowLinkModal(true)}
-              className="w-10 h-10 flex items-center justify-center bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-xl border border-gray-100 shadow-sm transition-all group relative"
-              title="Manage Links"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap">
-                Add/Edit Links
-              </span>
-            </button>
-          </>
-        )}
-      </div>
+      {user && isApproved && (
+        <div className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2 p-1.5 transition-all duration-500 bg-[#0f172a]/5 backdrop-blur-[2px] hover:backdrop-blur-xl hover:bg-[#0f172a]/80 border-l border-y border-white/5 hover:border-white/20 rounded-l-2xl shadow-none hover:shadow-2xl group/sidebar translate-x-8 hover:translate-x-0">
+          <div className="flex flex-col gap-2 opacity-20 group-hover/sidebar:opacity-100 transition-opacity duration-500">
+            {sidebarLinks.map((link, idx) => {
+              const openInNewTab = shouldOpenInNewTab(link.url);
+              if (openInNewTab) {
+                return (
+                  <a
+                    key={`${link.name}-${idx}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-xl border border-white/5 shadow-sm transition-all group relative"
+                    title={link.name}
+                  >
+                    {getIcon(link.icon, link.url)}
+                    <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap">
+                      {link.name}
+                    </span>
+                  </a>
+                );
+              }
+              return (
+                <button
+                  key={`${link.name}-${idx}`}
+                  onClick={() => setExternalUrl(link.url)}
+                  className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-xl border border-white/5 shadow-sm transition-all group relative"
+                  title={link.name}
+                >
+                  {getIcon(link.icon, link.url)}
+                  <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap">
+                    {link.name}
+                  </span>
+                </button>
+              );
+            })}
+            {isSupremeAdmin && (
+              <>
+                <div className="h-px bg-white/10 my-1 mx-1" />
+                <button
+                  onClick={() => setShowLinkModal(true)}
+                  className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/40 hover:text-white rounded-xl border border-white/5 shadow-sm transition-all group relative"
+                  title="Manage Links"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap">
+                    Add/Edit Links
+                  </span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Manage Links Modal */}
       <AnimatePresence>
@@ -3278,10 +3296,14 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
         )}
 
         {/* Main Content Wrapper */}
-        <div className={cn("flex-1 flex flex-col min-h-screen transition-all", user && isApproved ? "md:ml-56" : "")}>
+        <div className={cn(
+          "flex-1 flex flex-col min-h-screen transition-all overscroll-none", 
+          user && isApproved ? "md:ml-56" : "",
+          user && isApproved ? "pt-16 pb-16 md:pt-0 md:pb-0 h-[100dvh] overflow-hidden md:h-auto md:overflow-visible" : ""
+        )}>
           {/* Header (Mobile + Desktop User Info) */}
           {user && isApproved && (
-            <header className="sticky top-0 z-40 w-full bg-[#0f172a] border-b border-slate-800 shadow-sm text-white">
+            <header className="fixed md:sticky top-0 left-0 md:left-auto right-0 z-40 w-full bg-[#0f172a] border-b border-slate-800 shadow-sm text-white">
             <div className="px-4 sm:px-6 h-16 flex items-center justify-between">
               {/* Mobile Logo & Menu Toggle */}
               <div className="flex items-center gap-3 md:hidden">
@@ -3291,10 +3313,8 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                 >
                   {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                 </button>
-                <div className="flex items-center bg-white/5 h-10 px-2 rounded-lg border border-white/10">
-                  <span className="text-[#FBBF24] font-black tracking-tighter">mav</span>
-                  <span className="text-[#3B82F6] font-black tracking-tighter">xon</span>
-                  <span className="text-white font-bold text-[10px] ml-1">IMS</span>
+                <div className="flex items-center bg-white/5 h-10 px-3 rounded-lg border border-white/10">
+                  <span className="font-black tracking-tighter text-xl text-blue-500 drop-shadow-[0_0_10px_rgba(59,130,246,0.3)]">IMS</span>
                 </div>
                 <div className="h-4 w-px bg-slate-700 mx-1"></div>
                 <h2 className="text-sm font-bold text-white tracking-tight truncate max-w-[100px] sm:max-w-[150px]">
@@ -3396,7 +3416,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t border-gray-200 bg-white"
+              className="md:hidden fixed top-16 left-0 right-0 z-40 border-t border-gray-200 bg-white shadow-xl max-h-[calc(100vh-8rem)] overflow-y-auto"
             >
               <div className="p-4 space-y-2">
                 <button
@@ -3772,19 +3792,30 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
         {user && isApproved && (
           <div className="space-y-12">
             
-            {showSearchBox && (
-                    <div className="max-w-xl mx-auto">
+            {(showSearchBox || activeTab === 'search') && (
+                    <div className="max-w-xl mx-auto px-4 md:px-0 mt-4 md:mt-0">
                       <div className="relative group">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                         <input
                           type="text"
                           placeholder="Search items by name, code or brand..."
+                          autoFocus={activeTab === 'search'}
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           className="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-200 rounded-2xl shadow-lg focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-lg font-medium text-slate-900 placeholder:text-slate-400"
                         />
                       </div>
                     </div>
+            )}
+
+            {activeTab === 'search' && !searchQuery.trim() && (
+              <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+                <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center">
+                  <Search className="w-10 h-10 text-blue-500" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Start Searching</h3>
+                <p className="text-gray-500 max-w-sm">Enter a product name, code, or brand to find what you're looking for.</p>
+              </div>
             )}
             {(activeTab === 'master' && isAdmin || activeTab === 'master_sheet' && isSuperAdmin) && (
             <div className="flex gap-2 p-1 bg-gray-100 rounded-xl w-fit">
@@ -4196,6 +4227,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                   )}>
                     {(activeTab === 'search' || (showSearchBox && searchQuery.trim() !== '') ? filteredTiles : tiles).length}
                   </span>
+                  <MobileSearchInput value={searchQuery} onChange={setSearchQuery} />
                 </h2>
                 <div className="flex gap-2">
                   {((isAdmin && activeTab === 'master') || (isSupremeAdmin && activeTab === 'master_sheet')) && (
@@ -4539,6 +4571,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                   )}>
                     {(activeTab === 'search' || (showSearchBox && searchQuery.trim() !== '') ? filteredGoods : goods).length}
                   </span>
+                  <MobileSearchInput value={searchQuery} onChange={setSearchQuery} />
                 </h2>
                 <div className="flex gap-2">
                   {((isAdmin && activeTab === 'master') || (isSupremeAdmin && activeTab === 'master_sheet')) && (
@@ -4845,6 +4878,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                   <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                     {(activeTab === 'search' || (showSearchBox && searchQuery.trim() !== '') ? filteredTools : tools).length}
                   </span>
+                  <MobileSearchInput value={searchQuery} onChange={setSearchQuery} />
                 </h2>
                 <div className="flex gap-2">
                   {((isAdmin && activeTab === 'master') || (isSupremeAdmin && activeTab === 'master_sheet')) && (
@@ -5100,6 +5134,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                       return matchesSearch && matchesMarketing;
                     }).length}
                   </span>
+                  <MobileSearchInput value={searchQuery} onChange={setSearchQuery} />
                 </h2>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
@@ -5466,6 +5501,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                       }).length;
                     })()}
                   </span>
+                  <MobileSearchInput value={searchQuery} onChange={setSearchQuery} />
                 </h2>
               </div>
               <div className={cn(
@@ -6890,7 +6926,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
       </AnimatePresence>
 
       {/* Footer */}
-      <footer className="sticky bottom-0 z-40 bg-[#0f172a] border-t border-slate-800 h-16 mt-auto text-white flex items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+      <footer className="fixed md:sticky bottom-0 left-0 md:left-auto right-0 z-40 bg-[#0f172a] border-t border-slate-800 h-16 mt-auto text-white flex items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 w-full">
           <div className="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4 text-[10px] sm:text-xs text-gray-400">
             <div className="flex-1 text-left hidden md:block">

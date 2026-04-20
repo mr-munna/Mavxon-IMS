@@ -44,3 +44,13 @@ button, [role="button"], .cursor-pointer-all-tabs {
 textarea.editing-input-active {
   resize: none;
 }
+
+/* Specific mobile scroll lock to prevent page bounce/scroll */
+@media (max-width: 767px) {
+  html, body {
+    overflow: hidden;
+    height: 100%;
+    position: fixed;
+    width: 100%;
+  }
+}

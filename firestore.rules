@@ -56,6 +56,10 @@ service cloud.firestore {
       return isSupremeAdmin() || (isEmailVerified() && userExists(request.auth.uid) && getUserData(request.auth.uid).status == 'approved');
     }
 
+    function isPendingOrApproved() {
+      return isSupremeAdmin() || (isEmailVerified() && userExists(request.auth.uid) && (getUserData(request.auth.uid).status == 'approved' || getUserData(request.auth.uid).status == 'pending'));
+    }
+
     // --- Entity Validations (Phase 4: Drafting) ---
 
     function isValidUser(data) {
@@ -153,7 +157,7 @@ service cloud.firestore {
     }
 
     match /tiles/{tileId} {
-      allow read: if isApproved();
+      allow read: if isPendingOrApproved();
       allow create: if isAdmin() && isValidTile(incoming());
       allow update: if isAdmin() && isValidTile(incoming()) && (
         isSuperAdmin() || 
@@ -163,7 +167,7 @@ service cloud.firestore {
     }
 
     match /goods/{goodId} {
-      allow read: if isApproved();
+      allow read: if isPendingOrApproved();
       allow create: if isAdmin() && isValidGood(incoming());
       allow update: if isAdmin() && isValidGood(incoming()) && (
         isSuperAdmin() || 
@@ -173,7 +177,7 @@ service cloud.firestore {
     }
 
     match /tools/{toolId} {
-      allow read: if isApproved();
+      allow read: if isPendingOrApproved();
       allow create: if isAdmin() && isValidTool(incoming());
       allow update: if isAdmin() && isValidTool(incoming()) && (
         isSuperAdmin() || 
@@ -183,7 +187,7 @@ service cloud.firestore {
     }
 
     match /bookedItems/{itemId} {
-      allow read: if isApproved();
+      allow read: if isPendingOrApproved();
       allow create: if isAdmin() && isValidBookedItem(incoming());
       allow update: if isAdmin() && isValidBookedItem(incoming());
       allow delete: if isSuperAdmin();
@@ -197,12 +201,12 @@ service cloud.firestore {
     }
 
     match /settings/{settingId} {
-      allow read: if isApproved();
+      allow read: if isPendingOrApproved();
       allow write: if isSuperAdmin();
     }
 
     match /savedQuotes/{quoteId} {
-      allow read: if isApproved();
+      allow read: if isPendingOrApproved();
       allow create: if isApproved();
       allow update: if isSuperAdmin();
       allow delete: if isSuperAdmin();
