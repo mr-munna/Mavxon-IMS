@@ -2185,7 +2185,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
         const w = parseFloat(parts[0]);
         const h = parseFloat(parts[1]);
         if (isNaN(w) || isNaN(h)) return 0;
-        return Number((p * (w / 30.48) * (h / 30.48)).toFixed(2));
+        return Number((p * (w / 30) * (h / 30)).toFixed(2));
       };
 
       data.diaBariSft = calculateSft(sizeStr, diaBariPcs);
@@ -2528,7 +2528,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                   const w = parseFloat(parts[0]);
                   const h = parseFloat(parts[1]);
                   if (isNaN(w) || isNaN(h)) return 0;
-                  return Number((p * (w / 30.48) * (h / 30.48)).toFixed(2));
+                  return Number((p * (w / 30) * (h / 30)).toFixed(2));
                 };
 
                 const diaBariSft = calculateSft(sizeStr, diaBariPcs);
@@ -6560,7 +6560,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                         const w = parseFloat(parts[0]);
                         const h = parseFloat(parts[1]);
                         if (isNaN(w) || isNaN(h)) return 0;
-                        return Number((p * (w / 30.48) * (h / 30.48)).toFixed(2));
+                        return Number((p * (w / 30) * (h / 30)).toFixed(2));
                       };
 
                       data.diaBariSft = calculateSft(sizeStr, diaBariPcs);
