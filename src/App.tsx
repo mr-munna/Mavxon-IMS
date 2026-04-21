@@ -1046,7 +1046,7 @@ export default function App() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
   const quoteRef = React.useRef<HTMLDivElement>(null);
 
-  const downloadPDF = async () => {
+    const downloadPDF = async () => {
     if (!quoteRef.current) return;
     const loadingToast = toast.loading('Preparing PDF generation...');
     
@@ -1062,7 +1062,7 @@ export default function App() {
       window.scrollTo(0, 0);
       
       // Ensure the element is visible and scrolled into view
-      quoteRef.current.scrollIntoView();
+      quoteRef.current.scrollIntoView({ behavior: 'instant', block: 'start' });
       
       // Temporarily remove constraints for capture
       originalOverflow = quoteRef.current.style.overflow;
@@ -1074,18 +1074,20 @@ export default function App() {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Pre-process images to base64 to avoid html2canvas CORS issues on custom domains
+      toast.loading('Processing images...', { id: loadingToast });
       const images = Array.from(quoteRef.current.querySelectorAll('img')) as HTMLImageElement[];
       
-      for (const img of images) {
+      await Promise.all(images.map(async (img) => {
         if (img.src && !img.src.startsWith('data:')) {
           originalSrcs.set(img, img.src);
           try {
-            img.src = await urlToBase64(img.src);
+            const base64 = await urlToBase64(img.src);
+            img.src = base64;
           } catch (e) {
             console.warn("Failed to convert image to base64 for PDF", e);
           }
         }
-      }
+      }));
 
       const header = quoteRef.current.querySelector('#quotation-header') as HTMLElement;
       const body = quoteRef.current.querySelector('#quotation-body') as HTMLElement;
@@ -1093,20 +1095,7 @@ export default function App() {
       const footer = quoteRef.current.querySelector('#quotation-footer') as HTMLElement;
 
       if (!header || !body || !lastPage || !footer) {
-        const missing = [];
-        if (!header) missing.push('Header');
-        if (!body) missing.push('Body');
-        if (!lastPage) missing.push('Terms/Signature');
-        if (!footer) missing.push('Footer');
-        
-        toast.dismiss(loadingToast);
-        toast.error(`Missing quotation elements: ${missing.join(', ')}`);
-        if (quoteRef.current) {
-          quoteRef.current.style.overflow = originalOverflow;
-          quoteRef.current.style.height = originalHeight;
-        }
-        window.scrollTo(scrollX, scrollY);
-        return;
+        throw new Error(`Missing elements: ${[!header && 'Header', !body && 'Content', !lastPage && 'Terms', !footer && 'Footer'].filter(Boolean).join(', ')}`);
       }
 
       toast.loading('Capturing content...', { id: loadingToast });
@@ -1114,245 +1103,168 @@ export default function App() {
       const canvasOptions = {
         scale: 1, // Use scale 1 for maximum reliability
         useCORS: true,
-        allowTaint: false, // Must be false to prevent SecurityError on toDataURL
-        logging: true,
+        allowTaint: false,
+        logging: false, // Set to false for production
         backgroundColor: '#ffffff',
-        imageTimeout: 90000,
+        imageTimeout: 30000,
         onclone: (clonedDoc: Document) => {
-          // Fix oklch/oklab issues more aggressively
-          const allElements = clonedDoc.querySelectorAll('*');
-          allElements.forEach(el => {
+          // Extremely aggressive oklch/var cleaning for Tailwind v4 support
+          const oklchPattern = /okl(ch|ab)\([^)]+\)/g;
+          const varPattern = /var\(--[^)]+\)/g;
+
+          clonedDoc.querySelectorAll('*').forEach(el => {
             const htmlEl = el as HTMLElement;
-            // Force colors to standard hex/rgb to avoid html2canvas crash
-            if (htmlEl.classList.contains('text-blue-600')) htmlEl.style.color = '#2563eb';
-            if (htmlEl.classList.contains('text-blue-500')) htmlEl.style.color = '#3b82f6';
-            if (htmlEl.classList.contains('text-gray-900')) htmlEl.style.color = '#111827';
-            if (htmlEl.classList.contains('text-gray-600')) htmlEl.style.color = '#4b5563';
-            if (htmlEl.classList.contains('text-gray-500')) htmlEl.style.color = '#6b7280';
-            if (htmlEl.classList.contains('text-red-600')) htmlEl.style.color = '#dc2626';
-            if (htmlEl.classList.contains('bg-blue-600')) htmlEl.style.backgroundColor = '#2563eb';
-            if (htmlEl.classList.contains('bg-gray-900')) htmlEl.style.backgroundColor = '#111827';
-            if (htmlEl.classList.contains('bg-gray-50')) htmlEl.style.backgroundColor = '#f9fafb';
-            if (htmlEl.classList.contains('bg-black')) htmlEl.style.backgroundColor = '#000000';
-            if (htmlEl.classList.contains('bg-blue-50')) htmlEl.style.backgroundColor = '#eff6ff';
-            if (htmlEl.classList.contains('border-gray-100')) htmlEl.style.borderColor = '#f3f4f6';
-            if (htmlEl.classList.contains('border-gray-200')) htmlEl.style.borderColor = '#e5e7eb';
-            
-            // Generic replacement for any oklch or oklab in computed styles
             const style = htmlEl.style;
-            if (style) {
-              if (style.color && (style.color.includes('okl') || style.color.includes('var'))) style.color = '#1f2937';
-              if (style.backgroundColor && (style.backgroundColor.includes('okl') || style.backgroundColor.includes('var'))) style.backgroundColor = '#ffffff';
-              if (style.borderColor && (style.borderColor.includes('okl') || style.borderColor.includes('var'))) style.borderColor = '#d1d5db';
-              
-              if (style.cssText && (style.cssText.includes('oklch') || style.cssText.includes('oklab'))) {
-                style.cssText = style.cssText.replace(/oklch\([^)]+\)/g, '#3b82f6').replace(/oklab\([^)]+\)/g, '#3b82f6');
-              }
+            if (!style) return;
+
+            // Force concrete hex colors for common class-based colors
+            if (htmlEl.classList.contains('text-blue-600')) style.color = '#2563eb';
+            if (htmlEl.classList.contains('bg-blue-600')) style.backgroundColor = '#2563eb';
+            if (htmlEl.classList.contains('text-gray-900')) style.color = '#111827';
+            if (htmlEl.classList.contains('bg-gray-900')) style.backgroundColor = '#111827';
+            if (htmlEl.classList.contains('border-gray-200')) style.borderColor = '#e5e7eb';
+
+            // Catch-all: check inline styles for oklch or vars
+            if (style.color && (oklchPattern.test(style.color) || varPattern.test(style.color))) style.color = '#111827';
+            if (style.backgroundColor && (oklchPattern.test(style.backgroundColor) || varPattern.test(style.backgroundColor))) {
+               if (!htmlEl.classList.contains('bg-transparent')) style.backgroundColor = '#ffffff';
+            }
+            if (style.borderColor && (oklchPattern.test(style.borderColor) || varPattern.test(style.borderColor))) style.borderColor = '#d1d5db';
+            
+            if (style.cssText && (style.cssText.includes('oklch') || style.cssText.includes('oklab'))) {
+              style.cssText = style.cssText.replace(oklchPattern, '#000000').replace(/oklab\([^)]+\)/g, '#000000');
             }
           });
 
-          const styleTags = clonedDoc.querySelectorAll('style');
-          styleTags.forEach(tag => {
-            // Remove any CSS lines containing oklch or oklab entirely to prevent html2canvas parser crash
-            tag.innerHTML = tag.innerHTML.replace(/[^;{}]*okl(ch|ab)[^;{}]*;/g, '');
-            tag.innerHTML = tag.innerHTML.replace(/[^;{}]*okl(ch|ab)[^;{}]*}/g, '}');
-            
-            // Blanket replacement for any stragglers
-            tag.innerHTML = tag.innerHTML.replace(/okl(ch|ab)\([^)]+\)/g, 'rgb(0,0,0)');
-            // Extreme blanket replace just the word to prevent crash
-            tag.innerHTML = tag.innerHTML.replace(/okl(ch|ab)/g, 'rgb');
+          // Strip style tags of problematic modern colors
+          clonedDoc.querySelectorAll('style').forEach(tag => {
+            tag.innerHTML = tag.innerHTML
+              .replace(/[^{};]*:[^;}]*okl(ch|ab)[^;}]*(;|$)/g, '')
+              .replace(oklchPattern, '#000000');
           });
 
-          // Force essential PDF styles
           const pdfStyle = clonedDoc.createElement('style');
           pdfStyle.innerHTML = `
             * { 
               font-family: 'Times New Roman', Times, serif !important; 
               -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
+              color-adjust: exact !important;
               box-shadow: none !important;
               text-shadow: none !important;
             }
-            /* Hide UI elements */
-            button, .group-hover\\:opacity-100, input[type="file"], .page-break-marker, .animate-bounce, .page-break-indicator { 
-              display: none !important; 
-            }
-            
-            /* Ensure background colors are captured */
-            #quotation-header { background-color: #000000 !important; color: white !important; min-height: 100px !important; width: 100% !important; display: block !important; }
-            #quotation-footer { background-color: #000000 !important; color: white !important; display: block !important; width: 100% !important; height: 100px !important; }
-            
-            /* Table adjustments for PDF */
-            table { border-collapse: collapse !important; width: 100% !important; border: 1px solid #d1d5db !important; }
-            th, td { 
-              border: 1px solid #d1d5db !important; 
-              padding: 8px !important; 
-              text-align: center !important;
-              vertical-align: middle !important;
-              font-size: 10px !important;
-              background-color: transparent !important;
-            }
+            button, .group-hover\\:opacity-100, input, .page-break-marker, .animate-bounce { display: none !important; }
+            #quotation-header, #quotation-footer { background-color: #000000 !important; color: white !important; display: block !important; width: 100% !important; margin: 0 !important; }
+            table { border-collapse: collapse !important; width: 100% !important; table-layout: fixed !important; border: 1px solid #111827 !important; }
+            th, td { border: 1px solid #111827 !important; padding: 6px !important; font-size: 10px !important; word-break: break-all !important; }
             th { background-color: #f3f4f6 !important; font-weight: bold !important; }
-            
-            /* Layout fixes */
-            #quotation-body { padding: 40px !important; display: block !important; height: auto !important; width: 100% !important; background: white !important; }
-            #quotation-last-page-content { padding: 20px !important; padding-top: 0 !important; display: block !important; height: auto !important; width: 100% !important; background: white !important; }
-            
-            /* Text adjustments */
-            .text-red-600 { color: #dc2626 !important; }
-            .font-bold { font-weight: 700 !important; }
-            .uppercase { text-transform: uppercase !important; }
-            .underline { text-decoration: underline !important; }
           `;
           clonedDoc.head.appendChild(pdfStyle);
         }
       };
 
-      // Capture each part with error handling for each
       const capturePart = async (el: HTMLElement, name: string) => {
         try {
-          // Ensure element is visible before capture
-          const originalStyle = el.style.display;
+          const originalDisp = el.style.display;
           el.style.display = 'block';
           const canvas = await html2canvas(el, canvasOptions);
-          el.style.display = originalStyle;
+          el.style.display = originalDisp;
           return canvas;
         } catch (err) {
           console.error(`Failed to capture ${name}:`, err);
-          throw new Error(`Failed to capture ${name}. Please try again.`);
+          throw new Error(`Failed to capture ${name} section`);
         }
       };
 
-      const headerCanvas = await capturePart(header, 'Header');
-      const bodyCanvas = await capturePart(body, 'Body');
-      const lastPageCanvas = await capturePart(lastPage, 'Terms/Signature');
-      const footerCanvas = await capturePart(footer, 'Footer');
+      const [headerCanvas, bodyCanvas, lastPageCanvas, footerCanvas] = await Promise.all([
+        capturePart(header, 'Header'),
+        capturePart(body, 'Body'),
+        capturePart(lastPage, 'Terms'),
+        capturePart(footer, 'Footer')
+      ]);
 
       toast.loading('Building PDF pages...', { id: loadingToast });
 
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const margin = 10;
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
       const contentWidth = pdfWidth - (margin * 2);
-
-      const headerImgData = headerCanvas.toDataURL('image/png');
-      const bodyImgData = bodyCanvas.toDataURL('image/png');
-      const lastPageImgData = lastPageCanvas.toDataURL('image/png');
-      const footerImgData = footerCanvas.toDataURL('image/png');
 
       const headerHeight = (headerCanvas.height * pdfWidth) / headerCanvas.width;
       const footerHeight = (footerCanvas.height * pdfWidth) / footerCanvas.width;
-      
-      // Calculate body height in PDF units
-      const bodyFullHeight = (bodyCanvas.height * contentWidth) / bodyCanvas.width;
-      const lastPageHeight = (lastPageCanvas.height * contentWidth) / lastPageCanvas.width;
-
       const availableHeightPerPage = pdfHeight - headerHeight - footerHeight - (margin * 2);
       const maxSliceHeightCanvas = (availableHeightPerPage * bodyCanvas.width) / contentWidth;
 
-      // Get manual page break positions
       const markers = Array.from(body.querySelectorAll('.page-break-marker')) as HTMLElement[];
       const bodyRect = body.getBoundingClientRect();
-      const manualBreaks = markers.map(m => {
-        const mRect = m.getBoundingClientRect();
-        const relativeY = mRect.top - bodyRect.top;
-        return (relativeY * bodyCanvas.height) / bodyRect.height;
-      });
+      const breaks = markers.map(m => ((m.getBoundingClientRect().top - bodyRect.top) * bodyCanvas.height) / bodyRect.height)
+                          .filter(b => b > 0 && b < bodyCanvas.height)
+                          .sort((a,b) => a - b);
+      breaks.push(bodyCanvas.height);
+      const sortedBreaks = Array.from(new Set(breaks));
 
-      // Add the end of the body as a final break point
-      manualBreaks.push(bodyCanvas.height);
-      const sortedBreaks = Array.from(new Set(manualBreaks)).sort((a, b) => a - b);
-      
+      const headerData = headerCanvas.toDataURL('image/png', 0.8);
+      const footerData = footerCanvas.toDataURL('image/png', 0.8);
+      const lastPageData = lastPageCanvas.toDataURL('image/png', 0.8);
+
       let lastPoint = 0;
-      let pageNumber = 1;
+      let pageNum = 1;
 
       while (lastPoint < bodyCanvas.height) {
-        if (pageNumber > 1) pdf.addPage();
+        if (pageNum > 1) pdf.addPage();
+        pdf.addImage(headerData, 'PNG', 0, 0, pdfWidth, headerHeight);
 
-        // 1. Add Header (Full width)
-        pdf.addImage(headerImgData, 'PNG', 0, 0, pdfWidth, headerHeight);
+        const nextBreak = sortedBreaks.find(b => b > lastPoint + 20);
+        let currentNextPoint = (nextBreak && (nextBreak - lastPoint) <= maxSliceHeightCanvas)
+                                ? nextBreak : Math.min(lastPoint + maxSliceHeightCanvas, bodyCanvas.height);
 
-        // 2. Determine next break point
-        const nextManualBreak = sortedBreaks.find(b => b > lastPoint + 10);
-        
-        let nextBreak;
-        if (nextManualBreak && (nextManualBreak - lastPoint) <= maxSliceHeightCanvas) {
-          nextBreak = nextManualBreak;
-        } else {
-          nextBreak = Math.min(lastPoint + maxSliceHeightCanvas, bodyCanvas.height);
-        }
-
-        const sliceHeightCanvas = nextBreak - lastPoint;
+        const sliceHeightCanvas = currentNextPoint - lastPoint;
         const sliceHeightPDF = (sliceHeightCanvas * contentWidth) / bodyCanvas.width;
 
-        // 3. Add Body Slice
         const sliceCanvas = document.createElement('canvas');
         sliceCanvas.width = bodyCanvas.width;
         sliceCanvas.height = sliceHeightCanvas;
-        const ctx = sliceCanvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(
-            bodyCanvas,
-            0, lastPoint,
-            bodyCanvas.width, sliceHeightCanvas,
-            0, 0,
-            sliceCanvas.width, sliceCanvas.height
-          );
-          const sliceImgData = sliceCanvas.toDataURL('image/png');
-          pdf.addImage(sliceImgData, 'PNG', margin, headerHeight + margin, contentWidth, sliceHeightPDF);
+        const sliceCtx = sliceCanvas.getContext('2d');
+        if (sliceCtx) {
+          sliceCtx.drawImage(bodyCanvas, 0, lastPoint, bodyCanvas.width, sliceHeightCanvas, 0, 0, bodyCanvas.width, sliceHeightCanvas);
+          pdf.addImage(sliceCanvas.toDataURL('image/png', 0.8), 'PNG', margin, headerHeight + margin, contentWidth, sliceHeightPDF);
         }
 
-        // 4. Add Footer (Full width at bottom)
-        pdf.addImage(footerImgData, 'PNG', 0, pdfHeight - footerHeight, pdfWidth, footerHeight);
+        pdf.addImage(footerData, 'PNG', 0, pdfHeight - footerHeight, pdfWidth, footerHeight);
 
-        // 5. Handle Last Page Content (Terms, Signature)
-        if (nextBreak >= bodyCanvas.height - 5) {
-          const remainingSpaceOnLastPage = availableHeightPerPage - sliceHeightPDF;
-          const buffer = quoteItems.length === 0 ? 5 : 30;
-          const gap = quoteItems.length === 0 ? 5 : 15;
-          
-          if (!forceTermsToNewPage && remainingSpaceOnLastPage >= lastPageHeight + buffer + gap) {
-            pdf.addImage(lastPageImgData, 'PNG', margin, headerHeight + margin + sliceHeightPDF + gap, contentWidth, lastPageHeight);
+        if (currentNextPoint >= bodyCanvas.height - 5) {
+          const lastPageH = (lastPageCanvas.height * contentWidth) / lastPageCanvas.width;
+          if (!forceTermsToNewPage && (availableHeightPerPage - sliceHeightPDF) >= lastPageH + 15) {
+            pdf.addImage(lastPageData, 'PNG', margin, headerHeight + margin + sliceHeightPDF + 10, contentWidth, lastPageH);
           } else {
             pdf.addPage();
-            pdf.addImage(headerImgData, 'PNG', 0, 0, pdfWidth, headerHeight);
-            pdf.addImage(lastPageImgData, 'PNG', margin, headerHeight + margin, contentWidth, lastPageHeight);
-            pdf.addImage(footerImgData, 'PNG', 0, pdfHeight - footerHeight, pdfWidth, footerHeight);
+            pdf.addImage(headerData, 'PNG', 0, 0, pdfWidth, headerHeight);
+            pdf.addImage(lastPageData, 'PNG', margin, headerHeight + margin, contentWidth, lastPageH);
+            pdf.addImage(footerData, 'PNG', 0, pdfHeight - footerHeight, pdfWidth, footerHeight);
           }
         }
 
-        lastPoint = nextBreak;
-        pageNumber++;
+        lastPoint = currentNextPoint;
+        pageNum++;
       }
 
-      pdf.save(`Quotation_${quoteInfo.ref || Date.now()}.pdf`);
+      pdf.save(`Quotation_${quoteInfo.ref || 'Ref'}.pdf`);
       toast.dismiss(loadingToast);
-      toast.success('PDF generated successfully!');
-      // Restore styles and scroll
+      toast.success('Downloaded successfully!');
+    } catch (err) {
+      console.error('PDF Error:', err);
+      toast.dismiss(loadingToast);
+      toast.error(err instanceof Error ? err.message : 'PDF generation failed');
+    } finally {
       if (quoteRef.current) {
         quoteRef.current.style.overflow = originalOverflow;
         quoteRef.current.style.height = originalHeight;
       }
-      for (const [img, src] of originalSrcs.entries()) {
-        img.src = src;
-      }
-      window.scrollTo(scrollX, scrollY);
-    } catch (error) {
-      toast.dismiss(loadingToast);
-      console.error('PDF Generation Error:', error);
-      toast.error(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      // Restore styles and scroll on error too
-      if (quoteRef.current) {
-        quoteRef.current.style.overflow = originalOverflow;
-        quoteRef.current.style.height = originalHeight;
-      }
-      for (const [img, src] of originalSrcs.entries()) {
-        img.src = src;
-      }
+      for (const [img, src] of originalSrcs.entries()) img.src = src;
       window.scrollTo(scrollX, scrollY);
     }
   };
+
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [clearing, setClearing] = useState<string | null>(null);
