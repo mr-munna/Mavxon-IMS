@@ -1029,9 +1029,9 @@ const TableCell = ({ children, className, align = 'left', style }: { children?: 
 
 const MIMSLogo = ({ className }: { className?: string }) => (
   <div className={cn("flex items-center", className)}>
-    <span className="font-black tracking-tighter bg-gradient-to-br from-[#FBBF24] via-[#FBBF24] to-[#3B82F6] bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">M</span>
+    <span className="font-black tracking-tighter text-[#FBBF24] drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">M</span>
     <span className="text-white font-black tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">I</span>
-    <span className="font-black tracking-tighter bg-gradient-to-br from-[#FBBF24] via-[#FBBF24] to-[#3B82F6] bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">M</span>
+    <span className="font-black tracking-tighter text-[#3B82F6] drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]">M</span>
     <span className="text-white font-black tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">S</span>
   </div>
 );
@@ -3744,7 +3744,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                           autoFocus={activeTab === 'search'}
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-200 rounded-2xl shadow-lg focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-lg font-medium text-slate-900 placeholder:text-slate-400"
+                          className="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-200 rounded-2xl shadow-lg focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-lg font-bold text-slate-900 placeholder:text-slate-500"
                         />
                       </div>
                     </div>
@@ -3755,8 +3755,8 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                 <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center">
                   <Search className="w-10 h-10 text-blue-500" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Start Searching</h3>
-                <p className="text-gray-500 max-w-sm">Enter a product name, code, or brand to find what you're looking for.</p>
+                <h3 className="text-2xl font-black text-blue-600">Start Searching</h3>
+                <p className="text-blue-500 font-medium max-w-sm">Enter a product name, code, or brand to find what you're looking for.</p>
               </div>
             )}
 
@@ -3765,8 +3765,8 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                 <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center">
                   <Package className="w-10 h-10 text-gray-400 opacity-50" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">No results found</h3>
-                <p className="text-gray-500 max-w-sm">No items match your search for "{searchQuery}". Try a different product name, brand or code.</p>
+                <h3 className="text-2xl font-black text-slate-900">No results found</h3>
+                <p className="text-slate-600 font-medium max-w-sm">No items match your search for "{searchQuery}". Try a different product name, brand or code.</p>
               </div>
             )}
             {(activeTab === 'master' && isAdmin || activeTab === 'master_sheet' && isSuperAdmin) && (
