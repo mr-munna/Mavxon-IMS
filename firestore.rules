@@ -38,26 +38,26 @@ service cloud.firestore {
     }
 
     function isSupremeAdmin() {
-      return isEmailVerified() && (
+      return isSignedIn() && (
         request.auth.token.email == 'bijoymahmudmunna@gmail.com' ||
         (userExists(request.auth.uid) && getUserData(request.auth.uid).role == 'supreme_admin')
       );
     }
 
     function isSuperAdmin() {
-      return isSupremeAdmin() || (isEmailVerified() && userExists(request.auth.uid) && getUserData(request.auth.uid).role == 'super_admin');
+      return isSupremeAdmin() || (isSignedIn() && userExists(request.auth.uid) && getUserData(request.auth.uid).role == 'super_admin');
     }
 
     function isAdmin() {
-      return isSuperAdmin() || (isEmailVerified() && userExists(request.auth.uid) && getUserData(request.auth.uid).role == 'admin');
+      return isSuperAdmin() || (isSignedIn() && userExists(request.auth.uid) && getUserData(request.auth.uid).role == 'admin');
     }
 
     function isApproved() {
-      return isSupremeAdmin() || (isEmailVerified() && userExists(request.auth.uid) && getUserData(request.auth.uid).status == 'approved');
+      return isSupremeAdmin() || (isSignedIn() && userExists(request.auth.uid) && getUserData(request.auth.uid).status == 'approved');
     }
 
     function isPendingOrApproved() {
-      return isSupremeAdmin() || (isEmailVerified() && userExists(request.auth.uid) && (getUserData(request.auth.uid).status == 'approved' || getUserData(request.auth.uid).status == 'pending'));
+      return isSupremeAdmin() || (isSignedIn() && userExists(request.auth.uid) && (getUserData(request.auth.uid).status == 'approved' || getUserData(request.auth.uid).status == 'pending'));
     }
 
     // --- Entity Validations (Phase 4: Drafting) ---
@@ -161,7 +161,7 @@ service cloud.firestore {
       allow create: if isAdmin() && isValidTile(incoming());
       allow update: if isAdmin() && isValidTile(incoming()) && (
         isSuperAdmin() || 
-        incoming().diff(existing()).affectedKeys().hasOnly(['diaBariSft', 'diaBariPcs', 'bonorupaSft', 'bonorupaPcs', 'bananiSft', 'bananiPcs', 'dokhinkhanSft', 'dokhinkhanPcs', 'deleted'])
+        incoming().diff(existing()).affectedKeys().hasOnly(['diaBariSft', 'diaBariPcs', 'bonorupaSft', 'bonorupaPcs', 'bananiSft', 'bananiPcs', 'dokhinkhanSft', 'dokhinkhanPcs', 'deleted', 'totalSft', 'totalPcs'])
       );
       allow delete: if isSuperAdmin();
     }

@@ -58,6 +58,7 @@ export function SalesManager({
   tiles,
   goods,
   tools,
+  bookedItems,
   quoteHeader,
   quoteFooter
 }: { 
@@ -66,6 +67,7 @@ export function SalesManager({
   tiles: Tile[];
   goods: Good[];
   tools: Tool[];
+  bookedItems: any[];
   quoteHeader: any;
   quoteFooter: any;
 }) {
@@ -193,31 +195,75 @@ export function SalesManager({
       const batch = writeBatch(db);
       
       saleItems.forEach(saleItem => {
+         // Tile deduction
          const tileMatch = tiles.find(t => `${t.name} (${t.size})` === saleItem.name);
          if (tileMatch) {
             const tileRef = doc(db, 'tiles', tileMatch.id);
-            if (tileMatch.diaBariSft && saleItem.unit === 'sft') {
-                batch.update(tileRef, { diaBariSft: Math.max(0, tileMatch.diaBariSft - saleItem.quantity) });
-            } else if (tileMatch.diaBariPcs && saleItem.unit === 'pcs') {
-                batch.update(tileRef, { diaBariPcs: Math.max(0, tileMatch.diaBariPcs - saleItem.quantity) });
+            let deductSft = 0;
+            let deductPcs = 0;
+
+            const sizeStr = tileMatch.size ? String(tileMatch.size).toLowerCase() : '';
+            let unitSft = 0;
+            if (sizeStr.includes('x')) {
+                const parts = sizeStr.split('x');
+                const w = parseFloat(parts[0]);
+                const h = parseFloat(parts[1]);
+                if (!isNaN(w) && !isNaN(h)) {
+                    unitSft = (w / 30) * (h / 30);
+                }
+            }
+
+            if (saleItem.unit === 'sft') {
+                deductSft = saleItem.quantity;
+                deductPcs = unitSft > 0 ? Math.round(deductSft / unitSft) : 0;
+            } else if (saleItem.unit === 'pcs') {
+                deductPcs = saleItem.quantity;
+                deductSft = unitSft > 0 ? Number((deductPcs * unitSft).toFixed(2)) : 0;
+            }
+
+            const newDiaBariSft = Math.max(0, (tileMatch.diaBariSft || 0) - deductSft);
+            const newDiaBariPcs = Math.max(0, (tileMatch.diaBariPcs || 0) - deductPcs);
+            const newTotalSft = Number((newDiaBariSft + (tileMatch.bonorupaSft || 0) + (tileMatch.bananiSft || 0)).toFixed(2));
+            const newTotalPcs = newDiaBariPcs + (tileMatch.bonorupaPcs || 0) + (tileMatch.bananiPcs || 0);
+
+            batch.update(tileRef, { 
+                diaBariSft: newDiaBariSft, 
+                diaBariPcs: newDiaBariPcs,
+                totalSft: newTotalSft,
+                totalPcs: newTotalPcs
+            });
+
+            // Deduct from bookedItems for this client
+            const matchingBookedTile = bookedItems.find(b => !b.deleted && b.name === tileMatch.name && b.clientName.toLowerCase() === clientName.toLowerCase().trim());
+            if (matchingBookedTile) {
+                const bookRef = doc(db, 'bookedItems', matchingBookedTile.id);
+                const newBookedSft = Math.max(0, (matchingBookedTile.qtySft || 0) - deductSft);
+                const newBookedPcs = Math.max(0, (matchingBookedTile.qtyPcs || 0) - deductPcs);
+                batch.update(bookRef, { qtySft: newBookedSft, qtyPcs: newBookedPcs });
             }
          }
          
+         // Goods deduction
          const goodMatch = goods.find(g => `${g.brand} - ${g.description}` === saleItem.name);
          if (goodMatch) {
              const goodRef = doc(db, 'goods', goodMatch.id);
-             if (goodMatch.dokhinkhan) {
-                 batch.update(goodRef, { dokhinkhan: Math.max(0, goodMatch.dokhinkhan - saleItem.quantity) });
+             const newDokhinkhan = Math.max(0, (goodMatch.dokhinkhan || 0) - saleItem.quantity);
+             batch.update(goodRef, { dokhinkhan: newDokhinkhan });
+
+             const matchingBookedGood = bookedItems.find(b => !b.deleted && b.brand === goodMatch.brand && b.clientName.toLowerCase() === clientName.toLowerCase().trim() && (b.name === goodMatch.description || b.name === goodMatch.code || b.code === goodMatch.code));
+             if (matchingBookedGood) {
+                 const bookRef = doc(db, 'bookedItems', matchingBookedGood.id);
+                 const newBookedPcs = Math.max(0, (matchingBookedGood.qtyPcs || 0) - saleItem.quantity);
+                 batch.update(bookRef, { qtyPcs: newBookedPcs });
              }
          }
 
-          const toolMatch = tools.find(t => t.details === saleItem.name);
-          if (toolMatch) {
-              const toolRef = doc(db, 'tools', toolMatch.id);
-              if (toolMatch.qty) {
-                  batch.update(toolRef, { qty: Math.max(0, toolMatch.qty - saleItem.quantity) });
-              }
-          }
+         // Tools deduction
+         const toolMatch = tools.find(t => t.details === saleItem.name);
+         if (toolMatch) {
+             const toolRef = doc(db, 'tools', toolMatch.id);
+             batch.update(toolRef, { qty: Math.max(0, (toolMatch.qty || 0) - saleItem.quantity) });
+         }
       });
       await batch.commit();
 

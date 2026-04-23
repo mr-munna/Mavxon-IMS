@@ -6481,6 +6481,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
             tiles={tiles}
             goods={goods}
             tools={tools}
+            bookedItems={bookedItems}
             quoteHeader={quoteHeader}
             quoteFooter={quoteFooter}
           />
