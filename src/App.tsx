@@ -2325,7 +2325,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
     } catch (error) {
       console.warn("Direct fetch failed, trying CORS proxy...", error);
       try {
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
         return await fetchAsBase64(proxyUrl);
       } catch (proxyError) {
         console.error("Error converting URL to Base64 via proxy:", proxyError);
@@ -6759,7 +6759,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                           if (shortSft > 0) errorMsg += `${shortSft} SFT `;
                           if (shortPcs > 0) errorMsg += `${shortPcs} PCS `;
                           
-                          showStatus('error', errorMsg);
+                          toast.error(errorMsg);
                           return; // Stop submission
                         }
                       }
@@ -6768,10 +6768,10 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                     try {
                       if (editingItem) {
                         await updateDoc(doc(db, category, editingItem.item.id), data);
-                        showStatus('success', 'Item updated successfully.');
+                        toast.success('Item updated successfully.');
                       } else {
                         await addDoc(collection(db, category), data);
-                        showStatus('success', 'Item added successfully.');
+                        toast.success('Item added successfully.');
                       }
                       setShowAddModal(null);
                       setEditingItem(null);
@@ -6783,7 +6783,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                       setModalQtyPcs('');
                     } catch (err: any) {
                       console.error("Save error:", err);
-                      showStatus('error', `Failed to save item: ${err.message}`);
+                      toast.error(`Failed to save item: ${err.message}`);
                     }
                   }}
                   className="grid grid-cols-1 sm:grid-cols-2 gap-4"

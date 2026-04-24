@@ -221,14 +221,39 @@ export function SalesManager({
                 deductSft = unitSft > 0 ? Number((deductPcs * unitSft).toFixed(2)) : 0;
             }
 
-            const newDiaBariSft = Math.max(0, (tileMatch.diaBariSft || 0) - deductSft);
-            const newDiaBariPcs = Math.max(0, (tileMatch.diaBariPcs || 0) - deductPcs);
-            const newTotalSft = Number((newDiaBariSft + (tileMatch.bonorupaSft || 0) + (tileMatch.bananiSft || 0)).toFixed(2));
-            const newTotalPcs = newDiaBariPcs + (tileMatch.bonorupaPcs || 0) + (tileMatch.bananiPcs || 0);
+            // Cascading deduction logic for Tiles
+            let remSft = deductSft;
+            let remPcs = deductPcs;
+
+            let diaBariSft = tileMatch.diaBariSft || 0;
+            let diaBariPcs = tileMatch.diaBariPcs || 0;
+            if (diaBariSft >= remSft) { diaBariSft -= remSft; remSft = 0; } else { remSft -= diaBariSft; diaBariSft = 0; }
+            if (diaBariPcs >= remPcs) { diaBariPcs -= remPcs; remPcs = 0; } else { remPcs -= diaBariPcs; diaBariPcs = 0; }
+
+            let bonorupaSft = tileMatch.bonorupaSft || 0;
+            let bonorupaPcs = tileMatch.bonorupaPcs || 0;
+            if (bonorupaSft >= remSft) { bonorupaSft -= remSft; remSft = 0; } else { remSft -= bonorupaSft; bonorupaSft = 0; }
+            if (bonorupaPcs >= remPcs) { bonorupaPcs -= remPcs; remPcs = 0; } else { remPcs -= bonorupaPcs; bonorupaPcs = 0; }
+
+            let bananiSft = tileMatch.bananiSft || 0;
+            let bananiPcs = tileMatch.bananiPcs || 0;
+            if (bananiSft >= remSft) { bananiSft -= remSft; remSft = 0; } else { remSft -= bananiSft; bananiSft = 0; }
+            if (bananiPcs >= remPcs) { bananiPcs -= remPcs; remPcs = 0; } else { remPcs -= bananiPcs; bananiPcs = 0; }
+
+            // If there's still remainder, just force negative on diaBari (default)
+            if (remSft > 0) diaBariSft -= remSft;
+            if (remPcs > 0) diaBariPcs -= remPcs;
+
+            const newTotalSft = Number((diaBariSft + bonorupaSft + bananiSft).toFixed(2));
+            const newTotalPcs = diaBariPcs + bonorupaPcs + bananiPcs;
 
             batch.update(tileRef, { 
-                diaBariSft: newDiaBariSft, 
-                diaBariPcs: newDiaBariPcs,
+                diaBariSft: Number(diaBariSft.toFixed(2)), 
+                diaBariPcs: Math.round(diaBariPcs),
+                bonorupaSft: Number(bonorupaSft.toFixed(2)),
+                bonorupaPcs: Math.round(bonorupaPcs),
+                bananiSft: Number(bananiSft.toFixed(2)),
+                bananiPcs: Math.round(bananiPcs),
                 totalSft: newTotalSft,
                 totalPcs: newTotalPcs
             });
@@ -247,8 +272,25 @@ export function SalesManager({
          const goodMatch = goods.find(g => `${g.brand} - ${g.description}` === saleItem.name);
          if (goodMatch) {
              const goodRef = doc(db, 'goods', goodMatch.id);
-             const newDokhinkhan = Math.max(0, (goodMatch.dokhinkhan || 0) - saleItem.quantity);
-             batch.update(goodRef, { dokhinkhan: newDokhinkhan });
+             
+             let remQty = saleItem.quantity;
+             let dokhinkhan = goodMatch.dokhinkhan || 0;
+             if (dokhinkhan >= remQty) { dokhinkhan -= remQty; remQty = 0; } else { remQty -= dokhinkhan; dokhinkhan = 0; }
+             
+             let bonorupa = goodMatch.bonorupa || 0;
+             if (bonorupa >= remQty) { bonorupa -= remQty; remQty = 0; } else { remQty -= bonorupa; bonorupa = 0; }
+             
+             let banani = goodMatch.banani || 0;
+             if (banani >= remQty) { banani -= remQty; remQty = 0; } else { remQty -= banani; banani = 0; }
+             
+             // If there's still remainder, just force negative on dokhinkhan (default)
+             if (remQty > 0) dokhinkhan -= remQty;
+
+             batch.update(goodRef, { 
+                 dokhinkhan: dokhinkhan,
+                 bonorupa: bonorupa,
+                 banani: banani
+             });
 
              const matchingBookedGood = bookedItems.find(b => !b.deleted && b.brand === goodMatch.brand && b.clientName.toLowerCase() === clientName.toLowerCase().trim() && (b.name === goodMatch.description || b.name === goodMatch.code || b.code === goodMatch.code));
              if (matchingBookedGood) {
@@ -278,7 +320,9 @@ export function SalesManager({
       
       // Open the new sale
       setSelectedSale({ id: docRef.id, ...newSale });
+      toast.success("Sale completed successfully", { icon: "🔥" });
     } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Error saving sale");
       console.error("Error saving sale:", error);
     } finally {
       setIsSaving(false);

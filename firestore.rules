@@ -115,7 +115,7 @@ service cloud.firestore {
       return data.keys().hasAll(['details', 'qty']) &&
              data.details is string && data.details.size() <= 200 &&
              data.qty is number &&
-             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 1000)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 1000000)) &&
              (!('deleted' in data) || data.deleted is bool);
     }
 
@@ -129,13 +129,10 @@ service cloud.firestore {
     }
 
     function isValidSale(data) {
-      return data.keys().hasAll(['invoiceNumber', 'date', 'clientName', 'totalAmount']) &&
-             data.invoiceNumber is string && data.invoiceNumber.size() <= 50 &&
-             data.date is string && // Validating as string because client sends ISO string
-             data.clientName is string && data.clientName.size() <= 100 &&
-             data.totalAmount is number &&
-             data.items is list && data.items.size() <= 100 &&
-             (data.items.size() == 0 || (data.items[0] is map && data.items[0].keys().hasAll(['id', 'name', 'total'])));
+      return data.keys().hasAll(['invoiceNumber', 'clientName', 'totalAmount']) &&
+             data.invoiceNumber is string && 
+             data.clientName is string &&
+             data.totalAmount is number;
     }
 
     // --- Collections ---
