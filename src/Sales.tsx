@@ -416,6 +416,7 @@ export function SalesManager({
                    img.src = await fetchAsBase64(externalProxyUrl);
                  } catch (fallbackErr) {
                    console.error("All image proxies failed for PDF.");
+                   img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
                  }
                }
              }

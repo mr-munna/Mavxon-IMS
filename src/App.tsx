@@ -1176,12 +1176,38 @@ export default function App() {
         }
       };
 
+      // Pre-process DOM to remove OKLCH which crashes HTML2Canvas
+      quoteRef.current.querySelectorAll('*').forEach(el => {
+        const htmlEl = el as HTMLElement;
+        const styles = window.getComputedStyle(el);
+        htmlEl.dataset.origColor = htmlEl.style.color;
+        htmlEl.dataset.origBg = htmlEl.style.backgroundColor;
+        htmlEl.dataset.origBorder = htmlEl.style.borderColor;
+
+        if (styles.color && styles.color.includes('okl')) htmlEl.style.color = '#1f2937';
+        if (styles.backgroundColor && styles.backgroundColor.includes('okl')) {
+           // Don't override transparent backgrounds
+           if (styles.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+              htmlEl.style.backgroundColor = '#ffffff';
+           }
+        }
+        if (styles.borderColor && styles.borderColor.includes('okl')) htmlEl.style.borderColor = '#e5e7eb';
+      });
+
       const [headerCanvas, bodyCanvas, lastPageCanvas, footerCanvas] = await Promise.all([
         capturePart(header, 'Header'),
         capturePart(body, 'Body'),
         capturePart(lastPage, 'Terms'),
         capturePart(footer, 'Footer')
       ]);
+
+      // Restore original OKLCH styles
+      quoteRef.current.querySelectorAll('*').forEach(el => {
+        const htmlEl = el as HTMLElement;
+        if (htmlEl.dataset.origColor !== undefined) htmlEl.style.color = htmlEl.dataset.origColor;
+        if (htmlEl.dataset.origBg !== undefined) htmlEl.style.backgroundColor = htmlEl.dataset.origBg;
+        if (htmlEl.dataset.origBorder !== undefined) htmlEl.style.borderColor = htmlEl.dataset.origBorder;
+      });
 
       toast.loading('Building PDF pages...', { id: loadingToast });
 
@@ -2336,8 +2362,9 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
            const externalProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
            return await fetchAsBase64(externalProxyUrl);
         } catch (externalError) {
-           console.error("All proxies failed:", externalError);
-           return url;
+           console.error("All proxies failed, using transparent fallback:", externalError);
+           // Fallback transparent 1x1 GIF to prevent html2canvas failure
+           return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
         }
       }
     }
@@ -5920,11 +5947,13 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                             onChange={async (e) => {
                               const file = e.target.files?.[0];
                               if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  setQuoteHeader({...quoteHeader, headerImage: reader.result as string});
-                                };
-                                reader.readAsDataURL(file);
+                                try {
+                                  const base64 = await fileToBase64(file);
+                                  setQuoteHeader({...quoteHeader, headerImage: base64});
+                                } catch (err) {
+                                  console.error("Failed to process header image", err);
+                                  toast.error("Failed to process header image. It might be too large.");
+                                }
                               }
                             }}
                           />
@@ -6450,11 +6479,13 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                             onChange={async (e) => {
                               const file = e.target.files?.[0];
                               if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  setQuoteFooter({...quoteFooter, footerImage: reader.result as string});
-                                };
-                                reader.readAsDataURL(file);
+                                try {
+                                  const base64 = await fileToBase64(file);
+                                  setQuoteFooter({...quoteFooter, footerImage: base64});
+                                } catch (err) {
+                                  console.error("Failed to process footer image", err);
+                                  toast.error("Failed to process footer image. It might be too large.");
+                                }
                               }
                             }}
                           />
