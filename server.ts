@@ -102,20 +102,26 @@ app.post("/api/notify", async (req, res) => {
   try {
     // Get all approved users
     console.log("Fetching approved users...");
-    let usersSnapshot;
-    try {
-      usersSnapshot = await db.collection('users').where('status', '==', 'approved').get();
-      console.log(`Found ${usersSnapshot.size} approved users.`);
-    } catch (dbErr: any) {
-      console.error("Firestore query failed:", dbErr.message || dbErr);
-      if (dbErr.code === 7) {
-        console.error("Permission Denied. This service account may not have access to the database.");
+    // If client provided emails directly, use those to bypass Firebase Admin rules
+    let approvedEmails: string[] = [];
+    if (req.body.notifyEmails && Array.isArray(req.body.notifyEmails)) {
+      approvedEmails = req.body.notifyEmails;
+    } else {
+      let usersSnapshot;
+      try {
+        usersSnapshot = await db.collection('users').where('status', '==', 'approved').get();
+        console.log(`Found ${usersSnapshot.size} approved users.`);
+      } catch (dbErr: any) {
+        console.error("Firestore query failed:", dbErr.message || dbErr);
+        if (dbErr.code === 7) {
+          console.error("Permission Denied. This service account may not have access to the database.");
+        }
+        // Fallback: only notify supreme admin if DB fails
+        usersSnapshot = { docs: [], size: 0 };
       }
-      // Fallback: only notify supreme admin if DB fails
-      usersSnapshot = { docs: [], size: 0 };
+      
+      approvedEmails = usersSnapshot.docs.map((doc: any) => doc.data().email).filter((email: string) => !!email);
     }
-    
-    const approvedEmails = usersSnapshot.docs.map((doc: any) => doc.data().email).filter((email: string) => !!email);
     
     // Always include supreme admin if not already present
     const supremeAdminEmail = 'bijoymahmudmunna@gmail.com';
@@ -172,6 +178,33 @@ app.post("/api/notify", async (req, res) => {
   } catch (error) {
     console.error("Error sending notification:", error);
     res.status(500).json({ success: false, error: String(error) });
+  }
+});
+
+app.get("/api/proxy-image", async (req, res) => {
+  const url = req.query.url as string;
+  if (!url) {
+    return res.status(400).send("Missing URL parameter");
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
+    
+    const buffer = await response.arrayBuffer();
+    const contentType = response.headers.get("content-type") || "image/jpeg";
+    
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Content-Type", contentType);
+    // Cache control to speed up subsequent requests
+    res.set("Cache-Control", "public, max-age=31536000");
+    
+    res.send(Buffer.from(buffer));
+  } catch (error: any) {
+    console.error("Proxy image error:", error);
+    res.status(500).send(error.message || "Failed to proxy image");
   }
 });
 

@@ -380,6 +380,39 @@ export function SalesManager({
     try {
       const originalStyle = invoiceEl.style.display;
       invoiceEl.style.display = 'block';
+      
+      const originalSrcs = new Map<HTMLImageElement, string>();
+      const images = Array.from(invoiceEl.querySelectorAll('img')) as HTMLImageElement[];
+      
+      await Promise.all(images.map(async (img) => {
+        if (img.src && !img.src.startsWith('data:')) {
+          originalSrcs.set(img, img.src);
+          try {
+             const url = img.src;
+             let fetchAsBase64 = async (fetchUrl: string) => {
+                const response = await fetch(fetchUrl);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const blob = await response.blob();
+                return await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(blob);
+                });
+             };
+             
+             try {
+                img.src = await fetchAsBase64(url);
+             } catch (fetchErr) {
+               const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
+               img.src = await fetchAsBase64(proxyUrl);
+             }
+          } catch (e) {
+            console.warn("Failed to convert image to base64 for PDF", e);
+          }
+        }
+      }));
+
       const canvas = await html2canvas(invoiceEl, {
         scale: 2,
         useCORS: true,
@@ -390,13 +423,13 @@ export function SalesManager({
               const htmlEl = el as HTMLElement;
               // Detect and replace okl colors which crash html2canvas
               const styles = window.getComputedStyle(el);
-              if (styles.color.includes('okl')) {
+              if (styles.color && styles.color.includes('okl')) {
                   htmlEl.style.color = '#1f2937';
               }
-              if (styles.backgroundColor.includes('okl')) {
+              if (styles.backgroundColor && styles.backgroundColor.includes('okl')) {
                   htmlEl.style.backgroundColor = '#f3f4f6';
               }
-              if (styles.borderColor.includes('okl')) {
+              if (styles.borderColor && styles.borderColor.includes('okl')) {
                 htmlEl.style.borderColor = '#e5e7eb';
               }
               // Specific fixes for common tailwind classes
@@ -421,6 +454,12 @@ export function SalesManager({
             });
           }
       });
+      
+      // Restore original image sources
+      originalSrcs.forEach((originalUrl, img) => {
+        img.src = originalUrl;
+      });
+      
       invoiceEl.style.display = originalStyle;
 
       const imgData = canvas.toDataURL('image/png');

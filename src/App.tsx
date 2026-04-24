@@ -2325,7 +2325,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
     } catch (error) {
       console.warn("Direct fetch failed, trying CORS proxy...", error);
       try {
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
         return await fetchAsBase64(proxyUrl);
       } catch (proxyError) {
         console.error("Error converting URL to Base64 via proxy:", proxyError);
@@ -2579,6 +2579,8 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
   const sendNotification = async (action: 'edit' | 'delete', category: string, itemName: string, details: any) => {
     try {
       const isMaster = activeTab === 'master' || activeTab === 'master_sheet';
+      const approvedUsersEmails = users.filter(u => u.status === 'approved').map(u => u.email);
+      
       const response = await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2586,6 +2588,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
           action, 
           category, 
           itemName, 
+          notifyEmails: approvedUsersEmails,
           details: { 
             ...details, 
             isMasterSheet: isMaster,
@@ -6755,9 +6758,15 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                           const shortSft = Math.max(0, inputQtySft - roundedAvailableSft);
                           const shortPcs = Math.max(0, inputQtyPcs - roundedAvailablePcs);
                           
-                          let errorMsg = "Shortage detected: ";
-                          if (shortSft > 0) errorMsg += `${shortSft} SFT `;
-                          if (shortPcs > 0) errorMsg += `${shortPcs} PCS `;
+                          let errorMsg = "This product does not have enough stock available. You need an additional ";
+                          if (shortSft > 0 && shortPcs > 0) {
+                            errorMsg += `${shortSft.toFixed(2)} sft and ${Math.ceil(shortPcs)} pcs`;
+                          } else if (shortSft > 0) {
+                            errorMsg += `${shortSft.toFixed(2)} sft`;
+                          } else if (shortPcs > 0) {
+                            errorMsg += `${Math.ceil(shortPcs)} pcs`;
+                          }
+                          errorMsg += " to complete this order.";
                           
                           toast.error(errorMsg);
                           return; // Stop submission
