@@ -2848,6 +2848,43 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
   const activeGoods = useMemo(() => goods.filter(g => !g.deleted), [goods]);
   const activeTools = useMemo(() => tools.filter(t => !t.deleted), [tools]);
 
+  const stockItemsList = useMemo(() => {
+    const combined = [
+      ...activeTiles.map(t => ({ ...t, type: 'tile' as const })), 
+      ...activeGoods.map(g => ({ ...g, type: 'good' as const, name: (g.brand || '') + ' ' + (g.code || ''), size: 'N/A' }))
+    ];
+    
+    return combined.map(item => {
+      const bookedForThis = bookedItems.filter(b => 
+        (item.type === 'good' && b.code === item.code) || 
+        (item.type === 'tile' && b.name === item.name)
+      );
+      const bookedSft = bookedForThis.reduce((sum, b) => sum + (b.qtySft || 0), 0);
+      const bookedPcs = bookedForThis.reduce((sum, b) => sum + (b.qtyPcs || 0), 0);
+
+      const totalSft = (item as any).totalSft || 0;
+      const totalPcs = item.type === 'tile' ? 
+        ((item as any).totalPcs || 0) : 
+        (((item as any).dokhinkhan || 0) + ((item as any).bonorupa || 0) + ((item as any).banani || 0));
+
+      const stockSft = Math.max(0, Math.round(totalSft - bookedSft));
+      const stockPcs = Math.max(0, Math.round(totalPcs - bookedPcs));
+
+      return { ...item, stockSft, stockPcs };
+    }).filter(item => item.stockSft > 0 || item.stockPcs > 0);
+  }, [activeTiles, activeGoods, bookedItems]);
+
+  const filteredStockItems = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    return stockItemsList.filter(item => 
+      ((item as any).name || '').toLowerCase().includes(q) || 
+      ((item as any).code || '').toLowerCase().includes(q) ||
+      ((item as any).brand || '').toLowerCase().includes(q) ||
+      ((item as any).size || '').toLowerCase().includes(q)
+    );
+  }, [stockItemsList, searchQuery]);
+
   // Filtering
   const filteredTiles = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -4210,6 +4247,77 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
               }}
             />
             </div>
+          )}
+
+          {/* Stock Items Section */}
+          {(activeTab === 'stock' || ((activeTab === 'search' || showSearchBox) && searchQuery.trim() !== '' && filteredStockItems.length > 0)) && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-black flex items-center gap-2">
+                  <Database className="w-6 h-6 text-black" />
+                  {activeTab === 'stock' ? 'Stock Items' : 'Stock Results'}
+                  <span className="text-xs font-black text-white bg-[#0f172a] px-3 py-1 rounded-full shadow-lg ml-2">
+                    {(activeTab === 'search' || (showSearchBox && searchQuery.trim() !== '')) ? filteredStockItems.length : stockItemsList.length}
+                  </span>
+                  <MobileSearchInput value={searchQuery} onChange={setSearchQuery} />
+                </h2>
+              </div>
+              <div className={cn(
+                "rounded-2xl shadow-2xl border-2 overflow-auto max-h-[60vh] md:max-h-[70vh] overscroll-auto",
+                activeTab === 'search' ? "bg-white/50 backdrop-blur-3xl border-white/60" : "bg-white border-gray-200"
+              )}>
+                <table className="w-full border-separate border-spacing-0 min-w-[1000px]">
+                  <thead>
+                    <tr>
+                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>SL</TableHeader>
+                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Image</TableHeader>
+                      <TableHeader className={cn(activeTab === 'search' && "bg-slate-200/50")}>Tile/Item Name</TableHeader>
+                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Size</TableHeader>
+                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Code</TableHeader>
+                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Brand</TableHeader>
+                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Quantity (sft)</TableHeader>
+                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Quantity (pcs)</TableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {((activeTab === 'search' || (showSearchBox && searchQuery.trim() !== '')) ? filteredStockItems : stockItemsList).map((item, index) => (
+                      <tr 
+                        key={item.id} 
+                        onClick={() => setHighlightedRow(item.id)}
+                        className={cn(
+                          "transition-colors cursor-pointer",
+                          activeTab === 'search' ? "hover:bg-white/40" : "hover:bg-gray-50",
+                          highlightedRow === item.id && (activeTab === 'search' ? "bg-blue-100/50 ring-2 ring-blue-300 ring-inset" : "bg-yellow-50 ring-2 ring-yellow-200 ring-inset")
+                        )}
+                      >
+                            <TableCell align="center" style={{ color: BLUE_COLOR }} className="font-mono text-xs text-gray-800 font-normal border-slate-300">{index + 1}</TableCell>
+                            <TableCell align="center" className="border-slate-300">
+                              {item.imageUrl ? (
+                                <img 
+                                  src={item.imageUrl} 
+                                  alt={(item as any).name} 
+                                  className="w-12 h-12 object-cover rounded-lg border-2 border-white mx-auto cursor-zoom-in hover:scale-110 transition-transform shadow-md" 
+                                  referrerPolicy="no-referrer"
+                                  onClick={() => setPreviewImage(item.imageUrl)}
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-white/50 rounded-lg flex items-center justify-center mx-auto border border-white/40">
+                                  <Package className="w-6 h-6 text-gray-700" />
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="font-normal text-gray-800 border-slate-300 text-sm">{(item as any).name}</TableCell>
+                            <TableCell align="center" className="font-normal text-gray-800 border-slate-300">{(item as any).size}</TableCell>
+                            <TableCell align="center" className="font-mono text-blue-800 font-normal border-slate-300">{(item as any).code || (item as any).brand}</TableCell>
+                            <TableCell align="center" className="font-normal text-gray-800 border-slate-300">{(item as any).brand}</TableCell>
+                            <TableCell align="center" className={cn("font-normal text-lg border-slate-300", (item.stockSft || 0) <= 0 ? "text-red-700" : "text-blue-900")}>{item.stockSft || 0}</TableCell>
+                            <TableCell align="center" className={cn("font-normal text-lg border-slate-300", (item.stockPcs || 0) <= 0 ? "text-red-700" : "text-blue-900")}>{item.stockPcs || 0}</TableCell>
+                          </tr>
+                        ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
           )}
 
           {/* Tiles Section */}
@@ -5605,148 +5713,6 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                         </td>
                       </tr>
                     )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
-
-          {/* Stock Items Section */}
-          {(activeTab === 'stock' || ((activeTab === 'search' || showSearchBox) && searchQuery.trim() !== '' && [
-              ...tiles.filter(t => !t.deleted).map(t => ({ ...t, type: 'tile' })), 
-              ...goods.filter(g => !g.deleted).map(g => ({ ...g, type: 'good', name: (g.brand || '') + ' ' + (g.code || ''), size: 'N/A' }))
-            ].filter(item => {
-              const q = searchQuery.toLowerCase();
-              return (item.name || '').toLowerCase().includes(q) ||
-                (item.code || '').toLowerCase().includes(q) ||
-                (item.brand || '').toLowerCase().includes(q) ||
-                (item.size || '').toLowerCase().includes(q);
-            }).length > 0)) && (
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-black flex items-center gap-2">
-                  <Database className="w-6 h-6 text-black" />
-                  {activeTab === 'stock' ? 'Stock Items' : 'Stock Results'}
-                  <span className="text-xs font-black text-white bg-[#0f172a] px-3 py-1 rounded-full shadow-lg ml-2">
-                    {(() => {
-                      const combinedItems = [
-                        ...tiles.filter(t => !t.deleted).map(t => ({ ...t, type: 'tile' })), 
-                        ...goods.filter(g => !g.deleted).map(g => ({ ...g, type: 'good', name: g.brand + ' ' + g.code, size: 'N/A' }))
-                      ];
-                      const itemsWithStock = combinedItems.map(item => {
-                        const bookedForThis = bookedItems.filter(b => b.code === (item as any).code || b.name === (item as any).name);
-                        const bookedSft = bookedForThis.reduce((sum, b) => sum + (b.qtySft || 0), 0);
-                        const bookedPcs = bookedForThis.reduce((sum, b) => sum + (b.qtyPcs || 0), 0);
-                        const totalSft = (item as any).totalSft || 0;
-                        const totalPcs = (item as any).type === 'tile' ? ((item as any).totalPcs || 0) : (((item as any).dokhinkhan || 0) + ((item as any).bonorupa || 0) + ((item as any).banani || 0));
-                        const stockSft = Math.max(0, Math.round(totalSft - bookedSft) || 0);
-                        const stockPcs = Math.max(0, Math.round(totalPcs - bookedPcs) || 0);
-                        return { ...item, stockSft, stockPcs };
-                      });
-                      return itemsWithStock.filter(item => {
-                        if (item.stockSft <= 0 && item.stockPcs <= 0) return false;
-                        if (!(activeTab === 'search' || (showSearchBox && searchQuery.trim() !== ''))) return true;
-                        const q = searchQuery.toLowerCase();
-                        return (item as any).name?.toLowerCase().includes(q) || (item as any).code?.toLowerCase().includes(q) || (item as any).brand?.toLowerCase().includes(q);
-                      }).length;
-                    })()}
-                  </span>
-                  <MobileSearchInput value={searchQuery} onChange={setSearchQuery} />
-                </h2>
-              </div>
-              <div className={cn(
-                "rounded-2xl shadow-2xl border-2 overflow-auto max-h-[60vh] md:max-h-[70vh] overscroll-auto",
-                activeTab === 'search' ? "bg-white/50 backdrop-blur-3xl border-white/60" : "bg-white border-gray-200"
-              )}>
-                <table className="w-full border-separate border-spacing-0 min-w-[1000px]">
-                  <thead>
-                    <tr>
-                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>SL</TableHeader>
-                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Image</TableHeader>
-                      <TableHeader className={cn(activeTab === 'search' && "bg-slate-200/50")}>Tile/Item Name</TableHeader>
-                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Size</TableHeader>
-                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Code</TableHeader>
-                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Brand</TableHeader>
-                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Quantity (sft)</TableHeader>
-                      <TableHeader align="center" className={cn(activeTab === 'search' && "bg-slate-200/50")}>Quantity (pcs)</TableHeader>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      const combinedItems = [
-                        ...tiles.filter(t => !t.deleted).map(t => ({ ...t, type: 'tile' })), 
-                        ...goods.filter(g => !g.deleted).map(g => ({ ...g, type: 'good', name: g.brand + ' ' + g.code, size: 'N/A' }))
-                      ];
-                      
-                      const itemsWithStock = combinedItems.map(item => {
-                        const bookedForThis = bookedItems.filter(b => b.code === (item as any).code || b.name === (item as any).name);
-                        const bookedSft = bookedForThis.reduce((sum, b) => sum + (b.qtySft || 0), 0);
-                        const bookedPcs = bookedForThis.reduce((sum, b) => sum + (b.qtyPcs || 0), 0);
-
-                        const totalSft = (item as any).totalSft || 0;
-                        const totalPcs = (item as any).type === 'tile' ? 
-                          ((item as any).totalPcs || 0) : 
-                          (((item as any).dokhinkhan || 0) + ((item as any).bonorupa || 0) + ((item as any).banani || 0));
-
-                        const stockSft = Math.max(0, Math.round(totalSft - bookedSft));
-                        const stockPcs = Math.max(0, Math.round(totalPcs - bookedPcs));
-
-                        return { ...item, stockSft, stockPcs };
-                      });
-
-                      return itemsWithStock
-                        .filter(item => {
-                          const q = searchQuery.toLowerCase().trim();
-                          
-                          // If searching, hide items that don't match
-                          if (q) {
-                            const name = (item as any).name?.toLowerCase() || '';
-                            const code = (item as any).code?.toLowerCase() || '';
-                            const brand = (item as any).brand?.toLowerCase() || '';
-                            const matches = name.includes(q) || code.includes(q) || brand.includes(q);
-                            if (!matches) return false;
-                          }
-
-                          // If NOT searching, hide items with 0 stock
-                          if (!q && item.stockSft <= 0 && item.stockPcs <= 0) return false;
-                          
-                          return true;
-                        })
-                        .map((item, index) => (
-                          <tr 
-                            key={item.id} 
-                            onClick={() => setHighlightedRow(item.id)}
-                            className={cn(
-                              "transition-colors cursor-pointer",
-                              activeTab === 'search' ? "hover:bg-white/40" : "hover:bg-gray-50",
-                              highlightedRow === item.id && (activeTab === 'search' ? "bg-blue-100/50 ring-2 ring-blue-300 ring-inset" : "bg-yellow-50 ring-2 ring-yellow-200 ring-inset")
-                            )}
-                          >
-                            <TableCell align="center" style={{ color: BLUE_COLOR }} className="font-mono text-xs text-gray-800 font-normal border-slate-300">{index + 1}</TableCell>
-                            <TableCell align="center" className="border-slate-300">
-                              {item.imageUrl ? (
-                                <img 
-                                  src={item.imageUrl} 
-                                  alt={(item as any).name} 
-                                  className="w-12 h-12 object-cover rounded-lg border-2 border-white mx-auto cursor-zoom-in hover:scale-110 transition-transform shadow-md" 
-                                  referrerPolicy="no-referrer"
-                                  onClick={() => setPreviewImage(item.imageUrl)}
-                                />
-                              ) : (
-                                <div className="w-12 h-12 bg-white/50 rounded-lg flex items-center justify-center mx-auto border border-white/40">
-                                  <Package className="w-6 h-6 text-gray-700" />
-                                </div>
-                              )}
-                            </TableCell>
-                            <TableCell className="font-normal text-gray-800 border-slate-300 text-sm">{(item as any).name}</TableCell>
-                            <TableCell align="center" className="font-normal text-gray-800 border-slate-300">{(item as any).size}</TableCell>
-                            <TableCell align="center" className="font-mono text-blue-800 font-normal border-slate-300">{(item as any).code || (item as any).brand}</TableCell>
-                            <TableCell align="center" className="font-normal text-gray-800 border-slate-300">{(item as any).brand}</TableCell>
-                            <TableCell align="center" className={cn("font-normal text-lg border-slate-300", (item.stockSft || 0) <= 0 ? "text-red-700" : "text-blue-900")}>{item.stockSft || 0}</TableCell>
-                            <TableCell align="center" className={cn("font-normal text-lg border-slate-300", (item.stockPcs || 0) <= 0 ? "text-red-700" : "text-blue-900")}>{item.stockPcs || 0}</TableCell>
-                          </tr>
-                        ));
-                    })()}
                   </tbody>
                 </table>
               </div>
