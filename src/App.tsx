@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useMemo, Component, useRef } from 'react';
 import { SalesManager } from './Sales';
+import { BillingManager } from './components/Billing';
 import { 
   Search, 
   Plus, 
@@ -1058,6 +1059,7 @@ export default function App() {
     const scrollY = window.scrollY;
     let originalOverflow = '';
     let originalHeight = '';
+    let originalWidth = '';
     const originalSrcs = new Map<HTMLImageElement, string>();
 
     try {
@@ -1070,7 +1072,7 @@ export default function App() {
       // Temporarily remove constraints for capture
       originalOverflow = quoteRef.current.style.overflow;
       originalHeight = quoteRef.current.style.height;
-      const originalWidth = quoteRef.current.style.width;
+      originalWidth = quoteRef.current.style.width;
       
       quoteRef.current.style.overflow = 'visible';
       quoteRef.current.style.height = 'auto';
@@ -1162,8 +1164,8 @@ export default function App() {
             #quotation-header, #quotation-footer { background-color: #000000 !important; color: white !important; display: block !important; width: 100% !important; margin: 0 !important; }
             #quotation-body { width: 100% !important; padding: 40px !important; margin: 0 !important; max-width: none !important; }
             .overflow-auto, .overflow-x-auto { overflow: visible !important; width: 100% !important; max-width: none !important; }
-            table { border-collapse: collapse !important; width: 100% !important; table-layout: fixed !important; border: 1px solid #000000 !important; min-width: 0 !important; margin: 0 !important; }
-            th, td { border: 1px solid #000000 !important; padding: 4px 2px !important; font-size: 7pt !important; word-break: break-all !important; white-space: normal !important; vertical-align: middle !important; overflow: hidden !important; height: auto !important; }
+            table { border-collapse: collapse !important; width: 100% !important; table-layout: auto !important; border: 1px solid #000000 !important; min-width: 0 !important; margin: 0 !important; }
+            th, td { border: 1px solid #000000 !important; padding: 4px 2px !important; font-size: 7pt !important; word-break: break-all !important; white-space: normal !important; vertical-align: middle !important; overflow: hidden !important; height: auto !important; width: auto !important; }
             th { background-color: #f3f4f6 !important; font-weight: bold !important; text-align: center !important; }
             td { text-align: center !important; }
             img { max-width: 60px !important; max-height: 60px !important; object-fit: contain !important; }
@@ -1315,6 +1317,7 @@ export default function App() {
   } | null>(null);
   const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('landing');
+  const [quoteSubTab, setQuoteSubTab] = useState<'make' | 'view'>('make');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchBox, setShowSearchBox] = useState(false);
   const [marketingFilter, setMarketingFilter] = useState<string>('all');
@@ -3253,15 +3256,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                   >
                     <Calculator className="w-5 h-5 text-purple-400" /> Make Quote
                   </button>
-                  <button
-                    onClick={() => setActiveTab('view_quote')}
-                    className={cn(
-                      "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
-                      activeTab === 'view_quote' ? "bg-white text-[#0f172a] font-bold shadow-sm" : "text-slate-300 hover:bg-white/10 hover:text-white"
-                    )}
-                  >
-                    <Search className="w-5 h-5 text-cyan-400" /> View Quote
-                  </button>
+
                   <button
                     onClick={() => setActiveTab('sales')}
                     className={cn(
@@ -3270,6 +3265,15 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                     )}
                   >
                     <FileText className="w-5 h-5 text-indigo-400" /> Sales / Invoice
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('billing')}
+                    className={cn(
+                      "w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-start gap-3 uppercase tracking-wider text-sm text-left",
+                      activeTab === 'billing' ? "bg-white text-[#0f172a] font-bold shadow-sm" : "text-slate-300 hover:bg-white/10 hover:text-white"
+                    )}
+                  >
+                    <FileText className="w-5 h-5 text-emerald-400" /> Billing / Quotation
                   </button>
                 </>
               )}
@@ -3513,15 +3517,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                     >
                       <Calculator className="w-5 h-5" /> Make Quote
                     </button>
-                    <button
-                      onClick={() => { setActiveTab('view_quote'); setIsMenuOpen(false); }}
-                      className={cn(
-                        "w-full px-4 py-3 rounded-xl font-medium flex items-center gap-3 uppercase tracking-wider text-sm",
-                        activeTab === 'view_quote' ? "bg-[#0f172a] text-white font-bold" : "text-gray-500 hover:bg-gray-50"
-                      )}
-                    >
-                      <Search className="w-5 h-5" /> View Quote
-                    </button>
+
                     <button
                       onClick={() => { setActiveTab('sales'); setIsMenuOpen(false); }}
                       className={cn(
@@ -3530,6 +3526,15 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
                       )}
                     >
                       <FileText className="w-5 h-5" /> Sales / Invoice
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('billing'); setIsMenuOpen(false); }}
+                      className={cn(
+                        "w-full px-4 py-3 rounded-xl font-medium flex items-center gap-3 uppercase tracking-wider text-sm",
+                        activeTab === 'billing' ? "bg-[#0f172a] text-white font-bold" : "text-gray-500 hover:bg-gray-50"
+                      )}
+                    >
+                      <FileText className="w-5 h-5" /> Billing / Quotation
                     </button>
                   </>
                 )}
@@ -4198,64 +4203,7 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
             </section>
           )}
 
-          {activeTab === 'view_quote' && (
-            <div className="w-full overflow-x-auto pb-8">
-              <ViewQuote 
-                quoteHeader={quoteHeader}
-                quoteFooter={quoteFooter}
-                quotes={savedQuotes} 
-                isSuperAdmin={isSuperAdmin} 
-                isSupremeAdmin={isSupremeAdmin}
-              onDelete={async (id) => {
-                setConfirmAction({
-                  title: 'Delete Quotation',
-                  message: 'Are you sure you want to delete this quotation? This action cannot be undone.',
-                  type: 'danger',
-                  onConfirm: async () => {
-                    try {
-                      await deleteDoc(doc(db, 'savedQuotes', id));
-                      toast.success("Quotation deleted.");
-                    } catch (error) {
-                      console.error("Delete error:", error);
-                      toast.error("Failed to delete quotation.");
-                    }
-                    setConfirmAction(null);
-                  }
-                });
-              }}
-              onDownload={(quote) => {
-                loadQuoteForView(quote, false);
-                toast.success("Loading quotation for download...");
-                setTimeout(() => {
-                  downloadPDF();
-                }, 1000);
-              }}
-              onEdit={(quote) => {
-                loadQuoteForView(quote, true);
-                setIsEditingQuote(true);
-                toast.success("Loading quotation for editing...");
-              }}
-              onBulkDelete={async (ids) => {
-                setConfirmAction({
-                  title: 'Delete Multiple Quotations',
-                  message: `Are you sure you want to delete ${ids.length} selected quotations? This action cannot be undone.`,
-                  type: 'danger',
-                  onConfirm: async () => {
-                    try {
-                      const deletePromises = ids.map(id => deleteDoc(doc(db, 'savedQuotes', id)));
-                      await Promise.all(deletePromises);
-                      toast.success(`${ids.length} quotations deleted.`);
-                    } catch (error) {
-                      console.error("Bulk delete error:", error);
-                      toast.error("Failed to delete some quotations.");
-                    }
-                    setConfirmAction(null);
-                  }
-                });
-              }}
-            />
-            </div>
-          )}
+
 
           {/* Stock Items Section */}
           {(activeTab === 'stock' || ((activeTab === 'search' || showSearchBox) && searchQuery.trim() !== '' && filteredStockItems.length > 0)) && (
@@ -5773,12 +5721,35 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
 
           {activeTab === 'quote' && (
             <section className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                  <Calculator className="w-6 h-6 text-[#0f172a]" />
-                  GET QUOTE
-                </h2>
-                <div className="flex flex-wrap gap-2 sm:gap-3">
+              <div className="flex border-b border-gray-200">
+                <button
+                  className={cn(
+                    "px-4 py-2 font-bold uppercase tracking-wider text-sm transition-colors",
+                    quoteSubTab === 'make' ? "border-b-2 border-[#0f172a] text-[#0f172a]" : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                  )}
+                  onClick={() => setQuoteSubTab('make')}
+                >
+                  Make Quote
+                </button>
+                <button
+                  className={cn(
+                    "px-4 py-2 font-bold uppercase tracking-wider text-sm transition-colors",
+                    quoteSubTab === 'view' ? "border-b-2 border-cyan-600 text-cyan-600" : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                  )}
+                  onClick={() => setQuoteSubTab('view')}
+                >
+                  Saved Quotes
+                </button>
+              </div>
+
+              {quoteSubTab === 'make' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                      <Calculator className="w-6 h-6 text-[#0f172a]" />
+                      GET QUOTE
+                    </h2>
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
                   <Button 
                     variant="outline" 
                     onClick={handleClearQuote}
@@ -6492,6 +6463,68 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
               </div>
             </div>
           </div>
+          </div>
+          )}
+
+          {quoteSubTab === 'view' && (
+            <div className="w-full overflow-x-auto pb-8">
+              <ViewQuote 
+                quoteHeader={quoteHeader}
+                quoteFooter={quoteFooter}
+                quotes={savedQuotes} 
+                isSuperAdmin={isSuperAdmin} 
+                isSupremeAdmin={isSupremeAdmin}
+              onDelete={async (id) => {
+                setConfirmAction({
+                  title: 'Delete Quotation',
+                  message: 'Are you sure you want to delete this quotation? This action cannot be undone.',
+                  type: 'danger',
+                  onConfirm: async () => {
+                    try {
+                      await deleteDoc(doc(db, 'savedQuotes', id));
+                      toast.success("Quotation deleted.");
+                    } catch (error) {
+                      console.error("Delete error:", error);
+                      toast.error("Failed to delete quotation.");
+                    }
+                    setConfirmAction(null);
+                  }
+                });
+              }}
+              onDownload={(quote) => {
+                loadQuoteForView(quote, false);
+                toast.success("Loading quotation for download...");
+                setTimeout(() => {
+                  downloadPDF();
+                }, 1000);
+              }}
+              onEdit={(quote) => {
+                loadQuoteForView(quote, true);
+                setIsEditingQuote(true);
+                setQuoteSubTab('make');
+                toast.success("Loading quotation for editing...");
+              }}
+              onBulkDelete={async (ids) => {
+                setConfirmAction({
+                  title: 'Delete Multiple Quotations',
+                  message: `Are you sure you want to delete ${ids.length} selected quotations? This action cannot be undone.`,
+                  type: 'danger',
+                  onConfirm: async () => {
+                    try {
+                      const deletePromises = ids.map(id => deleteDoc(doc(db, 'savedQuotes', id)));
+                      await Promise.all(deletePromises);
+                      toast.success(`${ids.length} quotations deleted.`);
+                    } catch (error) {
+                      console.error("Bulk delete error:", error);
+                      toast.error("Failed to delete some quotations.");
+                    }
+                    setConfirmAction(null);
+                  }
+                });
+              }}
+            />
+            </div>
+          )}
         </section>
         )}
 
@@ -6506,6 +6539,12 @@ Mobile: +88 01670 266 023; +88 01896 459 103`);
             quoteHeader={quoteHeader}
             quoteFooter={quoteFooter}
           />
+        )}
+
+        {activeTab === 'billing' && (
+          <div className="w-full">
+            <BillingManager />
+          </div>
         )}
       </div>
     )}

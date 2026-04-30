@@ -58,7 +58,7 @@ export interface BookedItem {
 }
 
 export type Category = 'tiles' | 'goods' | 'tools' | 'bookedItems';
-export type Tab = 'landing' | 'search' | 'master' | 'booked' | 'stock' | 'quote' | 'master_sheet' | 'users' | 'view_quote' | 'sales' | 'settings';
+export type Tab = 'landing' | 'search' | 'master' | 'booked' | 'stock' | 'quote' | 'master_sheet' | 'users' | 'view_quote' | 'sales' | 'settings' | 'billing';
 
 export type UserRole = 'supreme_admin' | 'super_admin' | 'admin' | 'user' | 'guest';
 export type UserStatus = 'pending' | 'approved' | 'rejected';
